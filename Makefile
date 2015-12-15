@@ -1,6 +1,6 @@
 .PHONY: upload-release
 upload-release:
-	python setup.py release register sdist upload
+	python setup.py register sdist upload
 
 PYREVERSE_OPTS = --output=pdf
 .PHONY: view
