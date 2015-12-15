@@ -1,0 +1,206 @@
+#!/usr/bin/python
+#
+# -*- coding: utf-8 -*-
+# Copyright (C) 2015  Red Hat, Inc.
+#
+# This copyrighted material is made available to anyone wishing to use,
+# modify, copy, or redistribute it subject to the terms and conditions of
+# the GNU General Public License v.2, or (at your option) any later version.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY expressed or implied, including the implied warranties of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+# Public License for more details.  You should have received a copy of the
+# GNU General Public License along with this program; if not, write to the
+# Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.  Any Red Hat trademarks that are incorporated in the
+# source code or documentation are not subject to the GNU General Public
+# License and may only be used or replicated with the express permission of
+# Red Hat, Inc.
+#
+# Red Hat Author(s): Anne Mulhern <amulhern@redhat.com>
+
+"""
+    journaldev
+    ==========
+
+    Python script for displaying graphs in the journal.
+
+    .. moduleauthor::  Anne Mulhern  <amulhern@redhat.com>
+"""
+
+from __future__ import print_function
+
+import argparse
+import datetime
+import sys
+
+from networkx import nx
+
+from systemd import journal
+
+import pydevDAG
+
+_ACTIONS = ['print', 'write']
+_SEARCH_CHOICES = ['after', 'before', 'diff']
+
+def get_parser():
+    """
+    Generate an appropriate parser.
+
+    :returns: an argument parser
+    :rtype: `ArgumentParser`
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+       "datetime",
+       help="relevant date/time for this query, see journalctl man pages"
+    )
+    parser.add_argument(
+       "--action",
+       choices=_ACTIONS,
+       default="print",
+       help="action to perform"
+    )
+    parser.add_argument(
+       "--field",
+       action="append",
+       default=['MESSAGE_ID=8f2cfe3512a74101bb35c2bf93736034'],
+       help="additional field to search by"
+    )
+    parser.add_argument(
+       "--filename",
+       help="where to put output, if none specified output is to standard out"
+    )
+    parser.add_argument(
+       "--graph",
+       default="GRAPH",
+       help="key for graph data"
+    )
+    parser.add_argument(
+       "--search",
+       choices=_SEARCH_CHOICES,
+       default="after",
+       help="what to look for"
+    )
+    return parser
+
+def parse_datetime(t_string):
+    """
+    Parse the datetime spec with some leniency.
+
+    :param str t_string: a string in a reasonable format
+    :returns: a datetime object corresponding to the string or None
+    :rtype: `datetime.datetime` or NoneType
+    """
+    fmt_strings = [
+       "%Y-%m-%d %H-%M-%S",
+       "%Y-%m-%d"
+    ]
+
+    for fmt in fmt_strings:
+        try:
+            return datetime.datetime.strptime(t_string, fmt)
+        except ValueError:
+            pass
+    return None
+
+def get_graph(journal_handle, graph_key, choice):
+    """
+    Find the graph to display.
+
+    :param `journal.Reader` journal_handle: journal handle
+    :param str graph_key: what key the graph has in the entry
+    :param str choice: what result to present
+    :returns: a graph corresponding to the choice
+    :rtype: `DiGraph`
+    """
+    assert choice in _SEARCH_CHOICES
+
+    if choice == "after":
+        entry = journal_handle.get_next()
+        while entry:
+            if graph_key in entry:
+                return pydevDAG.StringUtils.from_string(
+                   entry[graph_key],
+                   pydevDAG.Reader.read
+                )
+            entry = journal_handle.get_next()
+        return None
+    elif choice == "before":
+        entry = journal_handle.get_previous()
+        while entry:
+            if graph_key in entry:
+                return pydevDAG.StringUtils.from_string(
+                   entry[graph_key],
+                   pydevDAG.Reader.read
+                )
+            entry = journal_handle.get_previous()
+        return None
+    elif choice == "diff":
+        try:
+            cursor = journal_handle.next()['__CURSOR']
+        except StopIteration:
+            cursor = None
+
+        prev_graph = get_graph(journal_handle, graph_key, "before")
+        if cursor is not None:
+            journal_handle.seek_cursor(cursor)
+            next_graph = get_graph(journal_handle, graph_key, "after")
+        else:
+            next_graph = nx.DiGraph()
+
+        return pydevDAG.DiffGraph.do_diff(
+           prev_graph or nx.DiGraph(),
+           next_graph or nx.DiGraph(),
+           "full"
+        )
+    else:
+        assert False
+
+def do_action(graph, action, out):
+    """
+    Do the action.
+
+    :param `DiGraph` graph: the graph
+    :param str action: the action to perform
+    :param file out: output stream for results
+    """
+    assert action in _ACTIONS
+
+    if action == "print":
+        pydevDAG.PrintGraph.print_graph(out, graph)
+    elif action == "write":
+        pydevDAG.Writer.write(graph, out)
+    else:
+        assert False
+
+def main():
+    """
+    The main method for extracting graphs from the journal.
+    """
+    cli_args = get_parser().parse_args()
+
+    journal_handle = journal.Reader()
+
+    target_time = parse_datetime(cli_args.datetime)
+    if target_time is None:
+        return "Invalid datetime %s" % cli_args.datetime
+
+    journal_handle.add_match(*cli_args.field)
+
+    journal_handle.seek_realtime(target_time)
+
+    graph = get_graph(journal_handle, cli_args.graph, cli_args.search)
+    if graph is None:
+        return 0
+
+    if not cli_args.filename:
+        do_action(graph, cli_args.action, sys.stdout)
+    else:
+        with open(cli_args.filename, "w") as out:
+            do_action(graph, cli_args.action, out)
+
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())

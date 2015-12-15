@@ -1,0 +1,37 @@
+# python
+*.pyc
+
+# pyreverse build directory
+_pyreverse
+
+# pytest
+.cache
+*-tests.xml
+
+# coverage
+.coverage
+htmlcov
+
+# tox
+.tox
+
+# distutils
+pydevDAG.egg-info
+
+# hypothesis
+.hypothesis
+
+# sphinx
+doc/_build
+doc/pydevDAG
+doc/tests
+
+# vim
+*.swp
+*.swo
+
+# archive
+*.tar.gz
+
+# junk files
+junk.*

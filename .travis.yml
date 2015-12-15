@@ -1,0 +1,30 @@
+sudo: false
+
+os:
+  - linux
+
+branches:
+  only:
+    - master
+language: python
+
+env:
+  matrix:
+    - TASK=lint
+    - TASK=coverage
+    - TASK=test
+
+matrix:
+  exclude:
+    - python: "2.7"
+      env: TASK=lint
+    - python: pypy
+      env: TASK=lint
+
+script:
+    - make -f Makefile.travis $TASK
+
+python:
+  - "2.7"
+  - "3.4"
+  - "pypy"

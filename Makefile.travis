@@ -1,0 +1,13 @@
+TOX=tox
+
+.PHONY: lint
+lint:
+	$(TOX) -c tox_travis.ini -e lint-travis
+
+.PHONY: coverage
+coverage:
+	$(TOX) -c tox_travis.ini -e coverage-travis
+
+.PHONY: test
+test:
+	$(TOX) -c tox_travis.ini -e test-travis

@@ -1,0 +1,106 @@
+#!/usr/bin/python
+#
+# -*- coding: utf-8 -*-
+# Copyright (C) 2015  Red Hat, Inc.
+#
+# This copyrighted material is made available to anyone wishing to use,
+# modify, copy, or redistribute it subject to the terms and conditions of
+# the GNU General Public License v.2, or (at your option) any later version.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY expressed or implied, including the implied warranties of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+# Public License for more details.  You should have received a copy of the
+# GNU General Public License along with this program; if not, write to the
+# Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.  Any Red Hat trademarks that are incorporated in the
+# source code or documentation are not subject to the GNU General Public
+# License and may only be used or replicated with the express permission of
+# Red Hat, Inc.
+#
+# Red Hat Author(s): Anne Mulhern <amulhern@redhat.com>
+
+"""
+    catdev
+    ======
+
+    Python script for logging graph to journal.
+
+    .. moduleauthor::  Anne Mulhern  <amulhern@redhat.com>
+"""
+
+from __future__ import print_function
+
+import argparse
+import sys
+import uuid
+
+from systemd import journal
+
+import pyudev
+
+import pydevDAG
+
+MESSAGE_UUID = uuid.UUID('8f2cfe3512a74101bb35c2bf93736034')
+
+def get_parser():
+    """
+    Generate an appropriate parser.
+
+    :returns: an argument parser
+    :rtype: `ArgumentParser`
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+       "filename",
+       nargs="?",
+       help="filename of previously recorded graph"
+    )
+    parser.add_argument(
+       "--graph",
+       default="GRAPH",
+       help="key for graph data"
+    )
+    parser.add_argument(
+       "--field",
+       action="append",
+       default=['MESSAGE=catdev', 'MESSAGE_ID=%s' % MESSAGE_UUID.hex],
+       help="additional field to store in log entry"
+    )
+    parser.add_argument(
+       "--list",
+       action="store_true",
+       help="list the default MESSAGE_ID"
+    )
+    parser.add_argument(
+       "--name",
+       default="graph",
+       help="a name for the graph"
+    )
+    return parser
+
+def main():
+    """
+    The main method for writing graphs to the journal.
+    """
+    cli_args = get_parser().parse_args()
+
+    if cli_args.list:
+        print("%s" % MESSAGE_UUID)
+        return 0
+
+    if cli_args.filename:
+        with open(cli_args.filename) as infile:
+            graph = pydevDAG.Reader.read(infile)
+    else:
+        context = pyudev.Context()
+        graph = pydevDAG.GenerateGraph.get_graph(context, cli_args.name)
+        pydevDAG.GenerateGraph.decorate_graph(context, graph)
+
+    graph_string = pydevDAG.StringUtils.as_string(graph, pydevDAG.Writer.write)
+
+    journal.sendv('%s=%s' % (cli_args.graph, graph_string), *cli_args.field)
+
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
