@@ -35,7 +35,7 @@ import abc
 
 import six
 
-import bytesize
+import justbytes
 
 from pydevDAG._attributes import DiffStatuses
 
@@ -271,7 +271,7 @@ class Size(NodeGetter):
                 return None
             size = sysfs.get('size')
             if size is not None:
-                return str(bytesize.Size(size, bytesize.Size(512)))
+                return str(justbytes.Size(size, justbytes.Size(512)))
             else:
                 return None
 
