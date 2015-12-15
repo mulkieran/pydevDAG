@@ -22,7 +22,7 @@ matrix:
       env: TASK=lint
 
 script:
-    - make -f Makefile.travis $TASK
+    - make -f Makefile $TASK
 
 python:
   - "2.7"
