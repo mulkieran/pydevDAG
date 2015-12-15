@@ -55,9 +55,6 @@ setuptools.setup(
         'Topic :: System :: Hardware',
         'Topic :: System :: Operating System Kernels :: Linux',
     ],
-    dependency_links = [
-        'git+https://github.com/systemd/python-systemd.git#egg=systemd'
-    ],
     install_requires = [
         'justbytes>0.2',
         'networkx',
