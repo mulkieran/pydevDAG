@@ -43,11 +43,12 @@ from ._compare import Compare
 from ._compare import Differences
 from ._compare import Matcher
 
-from ._print import LineArrangements
-from ._print import LineArrangementsConfig
-from ._print import LineInfo
+from ._print import GraphLineArrangements
+from ._print import GraphLineArrangementsConfig
+from ._print import GraphLineInfo
+from ._print import GraphXformLines
+
 from ._print import Print
-from ._print import XformLines
 
 from ._print import NodeGetter
 from ._print import NodeGetters

@@ -150,7 +150,7 @@ class PrintGraph(object):
            _print.NodeGetters.DEVNAME,
            _print.NodeGetters.IDENTIFIER
         ]
-        line_info = _print.LineInfo(
+        line_info = _print.GraphLineInfo(
            graph,
            ['NAME', 'DEVTYPE', 'DIFFSTATUS', 'BY-PATH', 'SIZE'],
            justification,
@@ -163,8 +163,8 @@ class PrintGraph(object):
            }
         )
 
-        lines = _print.LineArrangements.node_strings_from_graph(
-           _print.LineArrangementsConfig(
+        lines = _print.GraphLineArrangements.node_strings_from_graph(
+           _print.GraphLineArrangementsConfig(
               line_info.info,
               lambda k, v: str(v),
               'NAME'
@@ -172,7 +172,7 @@ class PrintGraph(object):
            graph
         )
 
-        lines = list(_print.XformLines.xform(line_info.keys, lines))
+        lines = list(_print.GraphXformLines.xform(line_info.keys, lines))
         lines = _print.Print.lines( # pylint: disable=redefined-variable-type
            line_info.keys,
            lines,

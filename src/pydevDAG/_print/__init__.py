@@ -25,11 +25,12 @@
 
     .. moduleauthor::  Anne Mulhern  <amulhern@redhat.com>
 """
-from ._print import LineArrangements
-from ._print import LineArrangementsConfig
-from ._print import LineInfo
+from ._graph import GraphLineArrangements
+from ._graph import GraphLineArrangementsConfig
+from ._graph import GraphLineInfo
+from ._graph import GraphXformLines
+
 from ._print import Print
-from ._print import XformLines
 
 from ._helpers import NodeGetter
 from ._helpers import NodeGetters

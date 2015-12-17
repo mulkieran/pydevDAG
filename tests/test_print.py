@@ -49,14 +49,14 @@ class TestGraphPrint(object):
         """
         Verify that the number of strings is at least a node's out-degree.
         """
-        line_info = pydevDAG.LineInfo(
+        line_info = pydevDAG.GraphLineInfo(
            GRAPH,
            ['NAME'],
            defaultdict(lambda: '<'),
            {'NAME' : [pydevDAG.NodeGetters.DEVNAME]}
         )
-        lines = pydevDAG.LineArrangements.node_strings_from_graph(
-           pydevDAG.LineArrangementsConfig(
+        lines = pydevDAG.GraphLineArrangements.node_strings_from_graph(
+           pydevDAG.GraphLineArrangementsConfig(
               line_info.info,
               lambda k, v: str(v),
               'NAME'
@@ -69,8 +69,8 @@ class TestGraphPrint(object):
         node = max(GRAPH.nodes(), key=GRAPH.out_degree)
 
         # pylint: disable=redefined-variable-type
-        lines = pydevDAG.LineArrangements.node_strings_from_root(
-           pydevDAG.LineArrangementsConfig(
+        lines = pydevDAG.GraphLineArrangements.node_strings_from_root(
+           pydevDAG.GraphLineArrangementsConfig(
               line_info.info,
               lambda k, v: str(v),
               'NAME'
@@ -81,7 +81,7 @@ class TestGraphPrint(object):
         lines = list(lines)
         assert len(lines) >= GRAPH.out_degree(node)
 
-        xformed = pydevDAG.XformLines.xform(line_info.keys, lines)
+        xformed = pydevDAG.GraphXformLines.xform(line_info.keys, lines)
         assert len(list(xformed)) == len(lines)
 
         final = pydevDAG.Print.lines(
