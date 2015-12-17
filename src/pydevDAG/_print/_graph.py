@@ -31,11 +31,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import networkx as nx
-
 from pydevDAG._attributes import DiffStatuses
 from pydevDAG._utils import GeneralUtils
 from pydevDAG._utils import GraphUtils
+
+from ._utils import HelpersUtils
 
 
 class GraphLineArrangementsConfig(object):
@@ -293,11 +293,7 @@ class GraphLineInfo(object):
         # all getters required for all columns
         getter_classes = set(g for name in getters for g in getters[name])
 
-        # all lookups they depend on
-        map_requires = set(r for g in getter_classes for r in g.map_requires)
-
-        # map from requires to a dict of attribute values
-        maps = dict((r, nx.get_node_attributes(graph, r)) for r in map_requires)
+        maps = HelpersUtils.get_map(getter_classes, graph)
 
         # functions, indexed by column name
         self._funcs = dict(
