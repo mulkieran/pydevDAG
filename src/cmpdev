@@ -34,10 +34,6 @@ import sys
 import pydevDAG
 
 
-_ACTIONS = ['dot', 'image', 'print', 'write']
-
-_DIFFS = ["left", "right", "full"]
-
 def get_parser():
     """
     Generate an appropriate parser.
