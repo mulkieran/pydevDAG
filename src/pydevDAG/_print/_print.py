@@ -36,8 +36,8 @@ import functools
 import networkx as nx
 
 from pydevDAG._attributes import DiffStatuses
+from pydevDAG._utils import GeneralUtils
 from pydevDAG._utils import GraphUtils
-from pydevDAG._utils import SortingUtils
 
 
 class LineArrangementsConfig(object):
@@ -87,7 +87,7 @@ class LineArrangements(object):
         """
         roots = sorted(
            GraphUtils.get_roots(graph),
-           key=SortingUtils.str_key_func_gen(
+           key=GeneralUtils.str_key_func_gen(
               lambda n: config.info_func(n, [config.sort_key])[config.sort_key]
            )
         )
@@ -180,7 +180,7 @@ class LineArrangements(object):
 
         successors = sorted(
            graph.successors(node),
-           key=SortingUtils.str_key_func_gen(
+           key=GeneralUtils.str_key_func_gen(
               lambda x: config.info_func(x, [config.sort_key])[config.sort_key]
            )
         )
@@ -416,7 +416,8 @@ class LineInfo(object):
 
         # functions, indexed by column name
         self._funcs = dict(
-           (k, composer([g.getter(maps) for g in getters[k]])) for k in keys
+           (k, GeneralUtils.composer([g.getter(maps) for g in getters[k]])) \
+              for k in keys
         )
 
     def info(self, node, keys=None, conv=lambda k, v: v):

@@ -55,11 +55,10 @@ class GraphUtils(object):
         return [n for n in graph if not nx.ancestors(graph, n)]
 
 
-class SortingUtils(object):
+class GeneralUtils(object):
     """
-    Utilities helpful for sorting.
+    General purpose utilities.
     """
-    # pylint: disable=too-few-public-methods
 
     @staticmethod
     def str_key_func_gen(func):
@@ -84,3 +83,28 @@ class SortingUtils(object):
             return '' if res is None else str(res)
 
         return key_func
+
+    @staticmethod
+    def composer(funcs):
+        """
+        Composes a list of funcs into a single func.
+
+        :param funcs: the functions
+        :type funcs: list of (* -> (str or NoneType))
+
+        :returns: a function to find a value for a node
+        :rtype: * -> (str or NoneType)
+        """
+        def the_func(node):
+            """
+            Returns a value for the node.
+            :param * node: a node
+            :returns: a value
+            :rtype: str or NoneType
+            """
+            return functools.reduce(
+               lambda v, f: v if v is not None else f(node),
+               funcs,
+               None
+            )
+        return the_func
