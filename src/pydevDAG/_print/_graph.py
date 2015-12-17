@@ -299,30 +299,6 @@ class GraphLineInfo(object):
         # map from requires to a dict of attribute values
         maps = dict((r, nx.get_node_attributes(graph, r)) for r in map_requires)
 
-        def composer(funcs):
-            """
-            Composes a list of funcs into a single func.
-
-            :param funcs: the functions
-            :type funcs: list of (* -> (str or NoneType))
-
-            :returns: a function to find a value for a node
-            :rtype: * -> (str or NoneType)
-            """
-            def the_func(node):
-                """
-                Returns a value for the node.
-                :param * node: a node
-                :returns: a value
-                :rtype: str or NoneType
-                """
-                return functools.reduce(
-                   lambda v, f: v if v is not None else f(node),
-                   funcs,
-                   None
-                )
-            return the_func
-
         # functions, indexed by column name
         self._funcs = dict(
            (k, GeneralUtils.composer([g.getter(maps) for g in getters[k]])) \
