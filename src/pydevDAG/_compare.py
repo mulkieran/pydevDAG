@@ -126,6 +126,22 @@ class Compare(object):
     # pylint: disable=too-few-public-methods
 
     @classmethod
+    def isomorphisms_iter(cls, graph1, graph2, node_match, edge_match):
+        """
+        Generator over isomorphisms on the graphs.
+
+        :param graph1: a graph
+        :param graph2: a graph
+        :param node_match: a function that checks whether nodes are equal
+        :type node_match: node * node -> bool
+        :param edge_match: a function that checks whether edges are equal
+        :type edge_match: node * node -> bool
+
+        """
+        matcher = iso.DiGraphMatcher(graph1, graph2, node_match, edge_match)
+        return matcher.isomorphisms_iter()
+
+    @classmethod
     def is_equivalent(cls, graph1, graph2, node_match, edge_match):
         """
         Whether these graphs represent equivalent storage configurations.
@@ -140,12 +156,13 @@ class Compare(object):
         :returns: True if the graphs are equivalent, otherwise False
         :rtype: bool
         """
-        return iso.is_isomorphic(
+        iso_iter = cls.isomorphisms_iter(
            graph1,
            graph2,
            node_match,
            edge_match
         )
+        return next(iso_iter, None) is not None
 
 class Differences(object):
     """

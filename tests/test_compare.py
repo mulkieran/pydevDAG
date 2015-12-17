@@ -49,7 +49,8 @@ class TestGraphComparison(object):
 
     def test_equal(self, tmpdir):
         """
-        Verify that two identical graphs are equivalent.
+        Verify that two identical graphs are equivalent and that they
+        have at least one identity isomorphism.
         """
         node_matcher = pydevDAG.Matcher(
            ['identifier', 'nodetype'],
@@ -75,6 +76,18 @@ class TestGraphComparison(object):
            graph2,
            node_matcher.get_iso_match(),
            edge_matcher.get_iso_match()
+        )
+
+        isomorphisms_iter = pydevDAG.Compare.isomorphisms_iter(
+           graph1,
+           graph2,
+           node_matcher.get_iso_match(),
+           edge_matcher.get_iso_match()
+        )
+
+        assert any(
+           all(x == isomorphism[x] for x in isomorphism) \
+           for isomorphism in isomorphisms_iter
         )
 
 
