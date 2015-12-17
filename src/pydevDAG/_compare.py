@@ -36,6 +36,7 @@ import networkx as nx
 import networkx.algorithms.isomorphism as iso
 
 from ._attributes import DiffStatuses
+from ._attributes import ElementTypes
 
 from ._decorations import Decorator
 from ._decorations import DifferenceMarkers
@@ -47,13 +48,13 @@ class Matcher(object):
     Note that the keys must be at the top-level.
     """
 
-    def __init__(self, keys, ele_type='node'):
+    def __init__(self, keys, ele_type=ElementTypes.NODE):
         """
         Initializers.
 
         :param keys: list of keys to match
         :type keys: list of str
-        :param str ele_type: the type of element, 'node' or 'edge'
+        :param ElementTypes ele_type: the type of a graph element
         """
         self._keys = keys
         self._ele_type = ele_type
@@ -70,7 +71,8 @@ class Matcher(object):
         :returns: a function that compares two graph elements
         :rtype: ele * ele -> bool
         """
-        attr_func = nx.get_node_attributes if self._ele_type == 'node' \
+        attr_func = nx.get_node_attributes \
+           if self._ele_type is ElementTypes.NODE \
            else nx.get_edge_attributes
 
         attr1_dict = dict()

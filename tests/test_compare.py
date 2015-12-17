@@ -36,6 +36,8 @@ import networkx as nx
 
 import pydevDAG
 
+from pydevDAG._attributes import ElementTypes
+
 from ._constants import GRAPH
 
 
@@ -49,8 +51,14 @@ class TestGraphComparison(object):
         """
         Verify that two identical graphs are equivalent.
         """
-        node_matcher = pydevDAG.Matcher(['identifier', 'nodetype'], 'node')
-        edge_matcher = pydevDAG.Matcher(['edgetype'], 'edge')
+        node_matcher = pydevDAG.Matcher(
+           ['identifier', 'nodetype'],
+           ElementTypes.NODE
+        )
+        edge_matcher = pydevDAG.Matcher(
+           ['edgetype'],
+           ElementTypes.EDGE
+        )
 
         new_graph = GRAPH.copy()
         filepath = str(tmpdir.join('test.gml'))
@@ -75,8 +83,14 @@ class TestGraphDifference(object):
     Test ability to find differences among graphs.
     """
 
-    NODE_MATCHER = pydevDAG.Matcher(['identifier', 'nodetype'], 'node')
-    EDGE_MATCHER = pydevDAG.Matcher(['edgetype'], 'edge')
+    NODE_MATCHER = pydevDAG.Matcher(
+       ['identifier', 'nodetype'],
+       ElementTypes.NODE
+    )
+    EDGE_MATCHER = pydevDAG.Matcher(
+       ['edgetype'],
+       ElementTypes.EDGE
+    )
 
     def test_equal(self, tmpdir):
         """

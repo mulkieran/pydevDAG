@@ -35,6 +35,8 @@ from collections import defaultdict
 
 import networkx as nx
 
+from ._attributes import ElementTypes
+
 from ._decorations import DevlinkValues
 from ._decorations import Decorator
 from ._decorations import SysfsAttributes
@@ -196,7 +198,10 @@ class DiffGraph(object):
         :param `DiGraph` graph2: a graph
         :param str diff: the diff to perform
         """
-        node_matcher = _compare.Matcher(['identifier', 'nodetype'], 'node')
+        node_matcher = _compare.Matcher(
+           ['identifier', 'nodetype'],
+           ElementTypes.NODE
+        )
         match_func = node_matcher.get_match
         edge_matcher = lambda g1, g2: lambda x, y: x == y
         if diff == "full":
@@ -262,7 +267,10 @@ class CompareGraph(object):
         :returns: True if the graphs are identical, otherwise False
         :rtype: boolean
         """
-        node_matcher = _compare.Matcher(['identifier', 'nodetype'], 'node')
+        node_matcher = _compare.Matcher(
+           ['identifier', 'nodetype'],
+           ElementTypes.NODE
+        )
 
         return _compare.Compare.is_equivalent(
            graph1,
