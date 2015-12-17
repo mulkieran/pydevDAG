@@ -91,3 +91,27 @@ class TestGraphPrint(object):
            line_info.alignment
         )
         assert len(list(final)) >= len(list(xformed))
+
+
+class TestMappingPrint(object):
+    """
+    Test aspects of string representation of mapping.
+    """
+    # pylint: disable=too-few-public-methods
+
+
+    def test_empty_mapping(self):
+        """
+        The empty mapping should yield nothing.
+        """
+
+        mli = pydevDAG.MapLineInfos(
+           GRAPH,
+           GRAPH,
+           [pydevDAG.NodeGetters.DEVNAME],
+           ('GRAPH1', 'GRAPH2')
+        )
+
+        infos = mli.info(dict())
+
+        assert len(infos) == 0

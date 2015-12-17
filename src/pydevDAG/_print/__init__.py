@@ -30,6 +30,8 @@ from ._graph import GraphLineArrangementsConfig
 from ._graph import GraphLineInfo
 from ._graph import GraphXformLines
 
+from ._mapping import MapLineInfos
+
 from ._print import Print
 
 from ._helpers import NodeGetter

@@ -48,6 +48,8 @@ from ._print import GraphLineArrangementsConfig
 from ._print import GraphLineInfo
 from ._print import GraphXformLines
 
+from ._print import MapLineInfos
+
 from ._print import Print
 
 from ._print import NodeGetter
