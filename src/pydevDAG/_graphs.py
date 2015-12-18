@@ -31,11 +31,14 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import itertools
+
 from collections import defaultdict
 
 import networkx as nx
 
 from ._attributes import ElementTypes
+from ._attributes import NodeTypes
 
 from ._decorations import DevlinkValues
 from ._decorations import Decorator
@@ -46,6 +49,7 @@ from . import _compare
 from . import _display
 from . import _print
 from . import _structure
+from . import _utils
 
 
 class GenerateGraph(object):
@@ -298,3 +302,105 @@ class CompareGraph(object):
             return 1
 
         return 2
+
+
+class GraphIsomorphism(object):
+    """
+    Get isomorphisms between two graphs.
+    """
+    # pylint: disable=too-few-public-methods
+
+    @staticmethod
+    def isomorphisms_iter(graph1, graph2):
+        """
+        Isomorphisms between ``graph1`` and ``graph2``.
+
+        The type of storage entity that a node represents is considered
+        significant, but not its identity, unless it is a disk with a WWN.
+
+        It should always be the case that WWN nodes map to each other.
+
+        :param `DiGraph` graph1: a graph
+        :param `DiGraph` graph2: a graph
+        :returns: generator of graph isomorphisms
+        :rtype: generator of dict of node * node
+        """
+
+        def node_func(node1, node2):
+            """
+            :param node1: a dict of node attributes
+            :type node1: dict of str * object
+            :param node2: a dict of node attributes
+            :type node2: dict of str * object
+            :returns: True if nodes are eqivalent, otherwise False
+            :rtype: bool
+            """
+            nodetype = node1['nodetype']
+
+            if nodetype is not node2['nodetype']:
+                return False
+
+            if nodetype is NodeTypes.WWN:
+                return node1['identifier'] == node2['identifier']
+            else:
+                return True
+
+        return _compare.Compare.isomorphisms_iter(
+           graph1,
+           graph2,
+           node_func,
+           lambda x, y: x['edgetype'] is y['edgetype']
+        )
+
+    @staticmethod
+    def _minimized_isos(isos, maxnum):
+        """
+        Returns a generator of minimized isos, no longer than ``maxnum``.
+
+        :param isos: an iterable of isos
+        :param int maxnum: the maximum number to yield
+        """
+        return itertools.islice(
+           (_utils.GeneralUtils.minimize_mapping(iso) for iso in isos),
+           0,
+           maxnum
+        )
+
+    @classmethod
+    def print_isomorphism(cls, out, graph1, graph2):
+        """
+        Print the first isomorphism, if any.
+
+        :param `file` out: print destination
+        :param DiGraph graph1: the first graph
+        :param DiGraph graph2: the second graph
+        """
+        isos = cls.isomorphisms_iter(graph1, graph2)
+        minimized = list(cls._minimized_isos(isos, 10))
+
+        if len(minimized) is 0:
+            print('No isomorphism discovered.', end="\n", file=out)
+            return
+
+        isomorphism = min(minimized, key=len)
+
+        name_funcs = [
+           _print.NodeGetters.DMNAME,
+           _print.NodeGetters.DEVNAME,
+           _print.NodeGetters.IDENTIFIER
+        ]
+        mapinfo = _print.MapLineInfos(
+           graph1,
+           graph2,
+           name_funcs,
+           ('GRAPH 1', 'GRAPH 2')
+        )
+        lines = mapinfo.info(isomorphism)
+        lines = _print.Print.lines( # pylint: disable=redefined-variable-type
+           mapinfo.keys,
+           lines,
+           2,
+           {'GRAPH 1' : '<', 'GRAPH 2' : '>'}
+        )
+        for line in lines:
+            print(line, end="\n", file=out)

@@ -33,6 +33,7 @@ from ._graphs import CompareGraph
 from ._graphs import DiffGraph
 from ._graphs import DisplayGraph
 from ._graphs import GenerateGraph
+from ._graphs import GraphIsomorphism
 from ._graphs import PrintGraph
 
 from ._decorations import Decorator
