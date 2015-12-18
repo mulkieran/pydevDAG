@@ -108,3 +108,17 @@ class GeneralUtils(object):
                None
             )
         return the_func
+
+    @staticmethod
+    def minimize_mapping(mapping):
+        """
+        Return a minimized version of ``mapping``.
+
+        :param dict mapping: any mapping
+        :returns: a minimized mapping
+        :rtype: dict
+
+        The new mapping is the same, except that all instances where k == v
+        are missing.
+        """
+        return dict((k, v) for (k, v) in mapping.items() if k != v)
