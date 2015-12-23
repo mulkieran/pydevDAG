@@ -54,6 +54,45 @@ class GraphUtils(object):
         """
         return [n for n in graph if not nx.ancestors(graph, n)]
 
+    @staticmethod
+    def reverse(graph, copy=True):
+        """
+        Reverse a graph and indicate its status.
+
+        :param `DiGraph` graph: the graph
+        :param bool copy: if True, make a new copy of the graph
+        :returns: a reversed graph
+        :rtype: `DiGraph`
+        """
+        key = 'reversed'
+        graph = graph.reverse(copy=copy)
+        try:
+            graph.graph[key] = not graph.graph[key]
+        except KeyError:
+            graph.graph[key] = True
+        return graph
+
+    @classmethod
+    def set_direction(cls, graph, set_reversed=False, copy=True):
+        """
+        Set a graph's direction.
+
+        :param `DiGraph` graph: the graph
+        :param bool set_reversed: if True, direction is reversed
+        :param bool copy: if True, make a new copy of the graph
+        :returns: a reversed graph
+        :rtype: `DiGraph`
+        """
+        try:
+            is_reversed = graph.graph['reversed']
+        except KeyError:
+            is_reversed = False
+
+        if set_reversed != is_reversed:
+            graph = cls.reverse(graph, copy=copy)
+
+        return graph
+
 
 class GeneralUtils(object):
     """

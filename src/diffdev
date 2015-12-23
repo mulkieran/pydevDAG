@@ -111,10 +111,18 @@ def main():
     with open(args.path2) as infile:
         graph2 = pydevDAG.Reader.read(infile)
 
-    graph = pydevDAG.DiffGraph.do_diff(graph1, graph2, args.diff)
+    graph1 = pydevDAG.GraphUtils.set_direction(
+       graph1,
+       set_reversed=not args.inverse,
+       copy=False
+    )
+    graph2 = pydevDAG.GraphUtils.set_direction(
+       graph2,
+       set_reversed=not args.inverse,
+       copy=False
+    )
 
-    if args.inverse:
-        graph = graph.reverse(copy=False)
+    graph = pydevDAG.DiffGraph.do_diff(graph1, graph2, args.diff)
 
     if not args.outpath:
         do_action(graph, args.action, sys.stdout)

@@ -50,3 +50,21 @@ class TestGraphUtils(object):
         in_degrees = GRAPH.in_degree(roots)
 
         assert all(in_degrees[r] == 0 for r in roots)
+
+    def test_set_direction(self):
+        """
+        Test setting direction results.
+        """
+        graph = pydevDAG.GraphUtils.set_direction(
+           GRAPH,
+           set_reversed=True,
+           copy=True
+        )
+        assert graph.graph['reversed']
+
+        graph = pydevDAG.GraphUtils.set_direction(
+           graph,
+           set_reversed=True,
+           copy=False
+        )
+        assert graph.graph['reversed']

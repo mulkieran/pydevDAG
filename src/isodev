@@ -66,6 +66,17 @@ def main():
     with open(args.path2) as infile:
         graph2 = pydevDAG.Reader.read(infile)
 
+    graph1 = pydevDAG.GraphUtils.set_direction(
+       graph1,
+       set_reversed=False,
+       copy=False
+    )
+    graph2 = pydevDAG.GraphUtils.set_direction(
+       graph2,
+       set_reversed=False,
+       copy=False
+    )
+
     return pydevDAG.GraphIsomorphism.print_isomorphism(
        sys.stdout,
        graph1,

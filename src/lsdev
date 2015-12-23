@@ -94,8 +94,11 @@ def main():
     graph = pydevDAG.GenerateGraph.get_graph(context, args.name)
     pydevDAG.GenerateGraph.decorate_graph(context, graph)
 
-    if not args.inverse:
-        graph = graph.reverse(copy=False)
+    graph = pydevDAG.GraphUtils.set_direction(
+       graph,
+       set_reversed=not args.inverse,
+       copy=False
+    )
 
     if not args.filename:
         do_action(graph, args.action, sys.stdout)

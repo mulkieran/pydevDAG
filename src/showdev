@@ -111,8 +111,11 @@ def main():
     with open(args.filename) as infile:
         graph = pydevDAG.Reader.read(infile)
 
-    if args.inverse:
-        graph = graph.reverse(copy=False)
+    graph = pydevDAG.GraphUtils.set_direction(
+       graph,
+       set_reversed=not args.inverse,
+       copy=False
+    )
 
     if not args.outpath:
         do_action(graph, args.action, sys.stdout)
