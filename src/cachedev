@@ -1,0 +1,168 @@
+#!/usr/bin/python
+#
+# -*- coding: utf-8 -*-
+# Copyright (C) 2015  Red Hat, Inc.
+#
+# This copyrighted material is made available to anyone wishing to use,
+# modify, copy, or redistribute it subject to the terms and conditions of
+# the GNU General Public License v.2, or (at your option) any later version.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY expressed or implied, including the implied warranties of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+# Public License for more details.  You should have received a copy of the
+# GNU General Public License along with this program; if not, write to the
+# Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.  Any Red Hat trademarks that are incorporated in the
+# source code or documentation are not subject to the GNU General Public
+# License and may only be used or replicated with the express permission of
+# Red Hat, Inc.
+#
+# Red Hat Author(s): Anne Mulhern <amulhern@redhat.com>
+
+"""
+    cachedev
+    ========
+
+    Python script for caching a graph on change.
+
+    .. moduleauthor::  Anne Mulhern  <amulhern@redhat.com>
+"""
+
+import argparse
+import os
+import sys
+import uuid
+
+from systemd import journal
+
+import pyudev
+
+import pydevDAG
+
+MESSAGE_UUID = uuid.UUID('4e2b605fee0340969a338a9ecc1722b5').hex
+ERROR_MESSAGE_UUID = uuid.UUID('b714a26219cc49fe9c6d70001197579b').hex
+
+MESSAGE_IDS = {
+   ERROR_MESSAGE_UUID : ['MESSAGE', 'ERROR'],
+   MESSAGE_UUID : ['GRAPH']
+}
+
+def get_parser():
+    """
+    Generate an appropriate parser.
+
+    :returns: an argument parser
+    :rtype: `ArgumentParser`
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+       "--inverse",
+       action="store_true",
+       help="show devices in the inverse direction"
+    )
+    parser.add_argument(
+       "--filename",
+       default="graph.json",
+       help="name of cached file"
+    )
+    parser.add_argument(
+       "--dirpath",
+       default="/var/log/pydevDAG",
+       help="where to look for and store graphs, default (/var/log/pydevDAG)"
+    )
+    parser.add_argument(
+       "--name",
+       default="graph",
+       help="a name for the graph"
+    )
+    parser.add_argument(
+       "--listids",
+       action="store_true",
+       help="list values for MESSAGE_ID and required fields"
+    )
+    return parser
+
+
+def _get_prev(logdir, filename):
+    """
+    Get previous graph.
+
+    :param str logdir: the directory containing logs
+    :param str filename: name of log file
+    :returns: the previous graph, if available
+    :rtype: `DiGraph` or NoneType
+    """
+    filepath = os.path.join(logdir, filename)
+    try:
+        with open(filepath, "r") as instream:
+            return pydevDAG.Reader.read(instream)
+    except EnvironmentError:
+        return None
+
+
+def _write_current(logdir, filename, graph):
+    """
+    Write current graph.
+
+    :param str logdir: the directory containing logs
+    :param str filename: name of log file
+    """
+    if not os.path.isdir(logdir):
+        os.mkdir(logdir)
+
+    filepath = os.path.join(logdir, filename)
+    try:
+        with open(filepath, "w") as out:
+            pydevDAG.Writer.write(graph, out)
+    except EnvironmentError as err:
+        message = [
+           "MESSAGE=failed to write file %s" % filename,
+           "ERROR=%s" % err,
+           "MESSAGE_ID=%s" % ERROR_MESSAGE_UUID
+        ]
+        journal.sendv(*message)
+
+
+def _journal_current(graph):
+    """
+    Write a graph into the journal along with the MESSAGE_ID field.
+    """
+    graph_string = pydevDAG.StringUtils.as_string(graph, pydevDAG.Writer.write)
+    message = [
+       "%s=%s" % ("GRAPH", graph_string),
+       "MESSAGE_ID=%s" % MESSAGE_UUID
+    ]
+    journal.sendv(*message)
+
+
+def main():
+    """
+    The main method for listing device graphs.
+    """
+    args = get_parser().parse_args()
+
+    if args.listids:
+        for uid in MESSAGE_IDS:
+            print('%s' % uid)
+            for key in MESSAGE_IDS[uid]:
+                print('\t%s' % key)
+        return 0
+
+    context = pyudev.Context()
+    graph = pydevDAG.GenerateGraph.get_graph(context, args.name)
+    pydevDAG.GenerateGraph.decorate_graph(context, graph)
+
+    prev = _get_prev(args.dirpath, args.filename)
+    if prev is not None:
+        pydevDAG.GraphUtils.set_direction(prev, set_reversed=False, copy=False)
+        if pydevDAG.CompareGraph.identical(graph, prev):
+            return 0
+
+    _write_current(args.dirpath, args.filename, graph)
+    _journal_current(graph)
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
