@@ -84,7 +84,7 @@ class GenerateGraph(object):
         """
         table = dict()
 
-        properties = ['DEVNAME', 'DEVPATH', 'DEVTYPE']
+        properties = ['DEVNAME', 'DEVPATH', 'DEVTYPE', 'DM_UUID']
         table.update(UdevProperties.udev_properties(context, graph, properties))
 
         attributes = ['size', 'dm/name']
@@ -156,11 +156,12 @@ class PrintGraph(object):
         ]
         line_info = _print.GraphLineInfo(
            graph,
-           ['NAME', 'DEVTYPE', 'DIFFSTATUS', 'BY-PATH', 'SIZE'],
+           ['NAME', 'DEVTYPE', 'DMTYPE', 'DIFFSTATUS', 'BY-PATH', 'SIZE'],
            justification,
            {
               'NAME' : name_funcs,
               'DEVTYPE': [_print.NodeGetters.DEVTYPE],
+              'DMTYPE': [_print.NodeGetters.DMUUIDPREFIX],
               'DIFFSTATUS': [_print.NodeGetters.DIFFSTATUS],
               'SIZE': [_print.NodeGetters.SIZE],
               'BY-PATH': [_print.NodeGetters.BY_PATH]

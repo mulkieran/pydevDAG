@@ -223,6 +223,39 @@ class Dmname(NodeGetter):
         return the_func
 
 
+class DmUuidPrefix(NodeGetter):
+    """
+    Get the DMUUID prefix.
+    """
+    # pylint: disable=too-few-public-methods
+
+    map_requires = ['UDEV']
+
+    @staticmethod
+    def getter(maps):
+
+        def the_func(node):
+            """
+            Calculates the dm-uuid-prefix.
+
+            :param node: the node
+            :returns: the value to display for ``node``
+            :rtype: str or NoneType
+            """
+            udev_info = maps['UDEV'].get(node)
+            if udev_info is None:
+                return None
+            dmuuid = udev_info.get('DM_UUID')
+            if dmuuid is None:
+                return None
+            (dmcat, dash, _) = dmuuid.partition("-")
+            if dash == '':
+                return None
+            return dmcat
+
+        return the_func
+
+
 class Identifier(NodeGetter):
     """
     Get a name for a node.
@@ -290,5 +323,6 @@ class NodeGetters(object):
     DEVTYPE = Devtype
     DIFFSTATUS = Diffstatus
     DMNAME = Dmname
+    DMUUIDPREFIX = DmUuidPrefix
     IDENTIFIER = Identifier
     SIZE = Size
