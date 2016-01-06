@@ -156,10 +156,11 @@ class PrintGraph(object):
         ]
         line_info = _print.GraphLineInfo(
            graph,
-           ['NAME', 'DEVTYPE', 'DMTYPE', 'DIFFSTATUS', 'BY-PATH', 'SIZE'],
+           ['NAME', 'DEVNAME', 'DEVTYPE', 'DMTYPE', 'DIFFSTATUS', 'BY-PATH', 'SIZE'],
            justification,
            {
               'NAME' : name_funcs,
+              'DEVNAME' : [_print.NodeGetters.DEVNAME],
               'DEVTYPE': [_print.NodeGetters.DEVTYPE],
               'DMTYPE': [_print.NodeGetters.DMUUIDPREFIX],
               'DIFFSTATUS': [_print.NodeGetters.DIFFSTATUS],
