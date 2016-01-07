@@ -20,6 +20,8 @@ matrix:
       env: TASK=lint
     - python: pypy
       env: TASK=lint
+    - python: pypy
+      env: TASK=coverage
 
 script:
     - make -f Makefile $TASK
