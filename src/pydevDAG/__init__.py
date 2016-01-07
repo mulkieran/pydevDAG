@@ -27,6 +27,7 @@
 """
 from ._attributes import DiffStatuses
 from ._attributes import EdgeTypes
+from ._attributes import ElementTypes
 from ._attributes import NodeTypes
 
 from ._graphs import CompareGraph
@@ -60,10 +61,8 @@ from ._readwrite import StringUtils
 from ._readwrite import Reader
 from ._readwrite import Writer
 
-from ._structure import DMPartitionGraphs
-from ._structure import PartitionGraphs
-from ._structure import SpindleGraphs
-from ._structure import SysfsGraphs
+from ._structure import PyudevGraphs
+from ._structure import PyudevAggregateGraph
 from ._structure import SysfsTraversal
 
 from ._traversal import holders

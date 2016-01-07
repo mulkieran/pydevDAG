@@ -118,7 +118,10 @@ class TestSysfsGraphs(object):
         Moreover, all nodes have node_type DEVICE_PATH and all edges have
         type SLAVE.
         """
-        graph = pydevDAG.SysfsGraphs.complete(CONTEXT, subsystem="block")
+        graph = pydevDAG.PyudevGraphs.SYSFS_GRAPHS.complete(
+           CONTEXT,
+           subsystem="block"
+        )
         devs = list(CONTEXT.list_devices(subsystem="block"))
         assert nx.number_of_nodes(graph) == len(set(devs))
         assert set(nx.nodes(graph)) == set(d.device_path for d in devs)
@@ -141,7 +144,7 @@ class TestPartitionGraphs(object):
         The number of nodes in the graph is strictly greater than the number of
         partition devices, as partitions have to belong to some device.
         """
-        graph = pydevDAG.PartitionGraphs.complete(CONTEXT)
+        graph = pydevDAG.PyudevGraphs.PARTITION_GRAPHS.complete(CONTEXT)
         block_devices = CONTEXT.list_devices(subsytem="block")
         partitions = list(block_devices.match_property('DEVTYPE', 'partition'))
         num_partitions = len(partitions)
@@ -161,7 +164,7 @@ class TestSpindleGraphs(object):
         """
         Assert that the graph has no cycles.
         """
-        graph = pydevDAG.SpindleGraphs.complete(CONTEXT)
+        graph = pydevDAG.PyudevGraphs.SPINDLE_GRAPHS.complete(CONTEXT)
         assert nx.is_directed_acyclic_graph(graph)
 
 
@@ -175,5 +178,5 @@ class TestDMPartitionGraphs(object):
         """
         Assert that the graph has no cycles.
         """
-        graph = pydevDAG.DMPartitionGraphs.complete(CONTEXT)
+        graph = pydevDAG.PyudevGraphs.DM_PARTITION_GRAPHS.complete(CONTEXT)
         assert nx.is_directed_acyclic_graph(graph)

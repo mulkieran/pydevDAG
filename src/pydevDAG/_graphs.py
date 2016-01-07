@@ -67,12 +67,16 @@ class GenerateGraph(object):
         :rtype: `DiGraph`
         """
         graph_classes = [
-           _structure.DMPartitionGraphs,
-           _structure.PartitionGraphs,
-           _structure.SpindleGraphs,
-           _structure.SysfsBlockGraphs
+           _structure.PyudevGraphs.DM_PARTITION_GRAPHS,
+           _structure.PyudevGraphs.PARTITION_GRAPHS,
+           _structure.PyudevGraphs.SPINDLE_GRAPHS,
+           _structure.PyudevGraphs.SYSFS_BLOCK_GRAPHS
         ]
-        return _structure.Graph.graph(context, name, graph_classes)
+        return _structure.PyudevAggregateGraph.graph(
+           context,
+           name,
+           graph_classes
+        )
 
     @staticmethod
     def decorate_graph(context, graph):

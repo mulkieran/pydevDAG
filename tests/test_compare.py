@@ -36,7 +36,7 @@ import networkx as nx
 
 import pydevDAG
 
-from pydevDAG._attributes import ElementTypes
+from pydevDAG import ElementTypes
 
 from ._constants import GRAPH
 
