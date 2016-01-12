@@ -280,6 +280,56 @@ class Identifier(NodeGetter):
         return the_func
 
 
+class IdPath(NodeGetter):
+    """
+    Get an ID_PATH value for a node.
+    """
+    # pylint: disable=too-few-public-methods
+
+    map_requires = ['UDEV']
+
+    @staticmethod
+    def getter(maps):
+
+        def the_func(node):
+            """
+            Calculates an ID_PATH.
+
+            :param node: the node
+            :returns: the value to display for ``node``
+            :rtype: str or NoneType
+            """
+            udev_info = maps['UDEV'].get(node)
+            return udev_info and udev_info.get('ID_PATH')
+
+        return the_func
+
+
+class IdSasPath(NodeGetter):
+    """
+    Get an ID_SAS_PATH value for a node.
+    """
+    # pylint: disable=too-few-public-methods
+
+    map_requires = ['UDEV']
+
+    @staticmethod
+    def getter(maps):
+
+        def the_func(node):
+            """
+            Calculates an ID_SAS_PATH.
+
+            :param node: the node
+            :returns: the value to display for ``node``
+            :rtype: str or NoneType
+            """
+            udev_info = maps['UDEV'].get(node)
+            return udev_info and udev_info.get('ID_SAS_PATH')
+
+        return the_func
+
+
 class Size(NodeGetter):
     """
     Get a size for a node.
@@ -317,7 +367,7 @@ class NodeGetters(object):
     """
     # pylint: disable=too-few-public-methods
 
-    BY_PATH = ByPath
+    BY_PATH = ByPath # may be deprecated
     DEVNAME = Devname
     DEVPATH = Devpath
     DEVTYPE = Devtype
@@ -325,4 +375,6 @@ class NodeGetters(object):
     DMNAME = Dmname
     DMUUIDPREFIX = DmUuidPrefix
     IDENTIFIER = Identifier
+    IDPATH = IdPath
+    IDSASPATH = IdSasPath
     SIZE = Size

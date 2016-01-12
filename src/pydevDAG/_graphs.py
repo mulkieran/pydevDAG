@@ -40,7 +40,6 @@ import networkx as nx
 from ._attributes import ElementTypes
 from ._attributes import NodeTypes
 
-from ._decorations import DevlinkValues
 from ._decorations import Decorator
 from ._decorations import SysfsAttributes
 from ._decorations import UdevProperties
@@ -88,16 +87,20 @@ class GenerateGraph(object):
         """
         table = dict()
 
-        properties = ['DEVNAME', 'DEVPATH', 'DEVTYPE', 'DM_UUID']
+        properties = [
+           'DEVNAME',
+           'DEVPATH',
+           'DEVTYPE',
+           'DM_UUID',
+           'ID_PATH',
+           'ID_SAS_PATH'
+        ]
         table.update(UdevProperties.udev_properties(context, graph, properties))
 
         attributes = ['size', 'dm/name']
         table.update(
            SysfsAttributes.sysfs_attributes(context, graph, attributes)
         )
-
-        categories = ['by-path']
-        table.update(DevlinkValues.devlink_values(context, graph, categories))
 
         Decorator.decorate_nodes(graph, table)
 
@@ -160,7 +163,16 @@ class PrintGraph(object):
         ]
         line_info = _print.GraphLineInfo(
            graph,
-           ['NAME', 'DEVNAME', 'DEVTYPE', 'DMTYPE', 'DIFFSTATUS', 'BY-PATH', 'SIZE'],
+           [
+              'NAME',
+              'DEVNAME',
+              'DEVTYPE',
+              'DMTYPE',
+              'DIFFSTATUS',
+              'ID_PATH',
+              'ID_SAS_PATH',
+              'SIZE'
+           ],
            justification,
            {
               'NAME' : name_funcs,
@@ -168,8 +180,9 @@ class PrintGraph(object):
               'DEVTYPE': [_print.NodeGetters.DEVTYPE],
               'DMTYPE': [_print.NodeGetters.DMUUIDPREFIX],
               'DIFFSTATUS': [_print.NodeGetters.DIFFSTATUS],
-              'SIZE': [_print.NodeGetters.SIZE],
-              'BY-PATH': [_print.NodeGetters.BY_PATH]
+              'ID_PATH' : [_print.NodeGetters.IDPATH],
+              'ID_SAS_PATH' : [_print.NodeGetters.IDSASPATH],
+              'SIZE': [_print.NodeGetters.SIZE]
            }
         )
 
