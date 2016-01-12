@@ -175,7 +175,9 @@ class DevlinkValues(object):
         Get device links values on this element.
 
         :returns: a map of devicelinks values
-        :rtype: dict of str * (list of str * NoneType)
+        :rtype: dict of str * (list of str or NoneType)
+
+        If the values are list of str, they are sorted.
         """
         try:
             device = pyudev.Device.from_path(context, element)
@@ -190,12 +192,17 @@ class DevlinkValues(object):
             key = link.category
             return key if key is not None else ""
 
+        result = dict.fromkeys(categories)
+
         devlinks = sorted(
            (Devlink(d) for d in device.device_links),
            key=key_func
         )
-        link_hash = dict((k, list(g)) for (k, g) in groupby(devlinks, key_func))
-        return dict((c, link_hash.get(c)) for c in categories)
+        result.update(
+           (k, g) for (k, g) in groupby(devlinks, key_func) if k in categories
+        )
+
+        return result
 
     @classmethod
     def devlink_values(cls, context, graph, categories):
@@ -209,6 +216,8 @@ class DevlinkValues(object):
 
         :returns: dict of property name, node, property value
         :rtype: dict of str * str * ((list of str) or NoneType)
+
+        If the leaves are list of str, the elements are sorted.
         """
         devlink_dict = dict()
         for node in cls.decorated(graph):
