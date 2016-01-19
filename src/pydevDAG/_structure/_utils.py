@@ -75,7 +75,8 @@ class GraphMethods(object):
        targets,
        edge_type,
        source_node_type,
-       target_node_type
+       target_node_type,
+       edge_attributes=None
     ):
         """
         Add edges to graph from sources to targets.
@@ -88,12 +89,15 @@ class GraphMethods(object):
         :param `EdgeType` edge_type: type for edges
         :param `NodeType` source_node_type: type for source nodes
         :param `NodeType` target_node_type: type for target nodes
-
-        Nodes are device_paths of each device, as these uniquely identify
-        the device.
+        :param edge_attributes: dict of edge attributes (default None)
+        :type edge_attributes: dict of str * object or NoneType
         """
         graph.add_nodes_from(cls.get_node_args(sources, source_node_type))
         graph.add_nodes_from(cls.get_node_args(targets, target_node_type))
 
         edges = ((x, y) for x in sources for y in targets)
-        graph.add_edges_from(edges, edgetype=edge_type)
+        graph.add_edges_from(
+           edges,
+           attr_dict=edge_attributes,
+           edgetype=edge_type
+        )
