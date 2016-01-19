@@ -30,6 +30,8 @@ from ._attributes import EdgeTypes
 from ._attributes import ElementTypes
 from ._attributes import NodeTypes
 
+from ._errors import DAGError
+
 from ._graphs import CompareGraph
 from ._graphs import DiffGraph
 from ._graphs import DisplayGraph
