@@ -104,7 +104,11 @@ class Utils(object):
         :returns: the result of reading from the nested dicts or None
         :rtype: str or NoneType
         """
+
         res = ele.attr[keys[0]]
+        if res == '':
+            return res
+
         if len(keys) == 1:
             return res
 
