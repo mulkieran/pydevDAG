@@ -377,6 +377,40 @@ class RemovedEdgeTransformer(GraphTransformer):
            Utils.is_diff_status(e, DiffStatuses.REMOVED))
 
 
+class EnclosureBayTransformer(GraphTransformer):
+    """
+    Label bay edges with their identifiers.
+    """
+
+    @staticmethod
+    def xform_object(graph, obj):
+        obj.attr['label'] = Utils.get_attr(obj, ['identifier'])
+
+    @classmethod
+    def objects(cls, graph):
+        return (
+           e for e in graph.iteredges() \
+              if Utils.get_attr(e, ['edgetype']) == 'EnclosureBay'
+        )
+
+
+class EnclosureTransformer(GraphTransformer):
+    """
+    Change shape of enclosure devices.
+    """
+
+    @staticmethod
+    def xform_object(graph, obj):
+        obj.attr['shape'] = 'rectangle'
+
+    @classmethod
+    def objects(cls, graph):
+        return (
+           e for e in graph.iternodes() \
+              if Utils.get_attr(e, ['SYSFS', 'subsystem']) == 'enclosure'
+        )
+
+
 class GraphTransformers(object):
     """
     A class that orders and does all graph transformations.

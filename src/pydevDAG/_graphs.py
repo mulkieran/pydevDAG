@@ -131,6 +131,8 @@ class DisplayGraph(object):
            _display.PartitionTransformer,
            _display.PartitionEdgeTransformer,
            _display.CongruenceEdgeTransformer,
+           _display.EnclosureBayTransformer,
+           _display.EnclosureTransformer,
            _display.AddedNodeTransformer,
            _display.RemovedNodeTransformer,
            _display.AddedEdgeTransformer,
