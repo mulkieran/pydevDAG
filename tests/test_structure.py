@@ -180,3 +180,27 @@ class TestDMPartitionGraphs(object):
         """
         graph = pydevDAG.PyudevGraphs.DM_PARTITION_GRAPHS.complete(CONTEXT)
         assert nx.is_directed_acyclic_graph(graph)
+
+
+class TestEnclosureGraphs(object):
+    """
+    Test enclosure graphs.
+    """
+    # pylint: disable=too-few-public-methods
+
+    def test_complete(self):
+        """
+        Assert that graph has no cycles.
+
+        Assert that all edges have type ENCLOSUREBAY.
+        """
+        graph = pydevDAG.PyudevGraphs.ENCLOSURE_GRAPHS.complete(CONTEXT)
+        assert nx.is_directed_acyclic_graph(graph)
+
+        edgetypes = nx.get_edge_attributes(graph, 'edgetype')
+        assert all(
+           v is pydevDAG.EdgeTypes.ENCLOSUREBAY for (k, v) in edgetypes.values()
+        )
+
+        identifiers = nx.get_edge_attributes(graph, 'identifier')
+        assert set(graph.edges()) == set(identifiers.keys())

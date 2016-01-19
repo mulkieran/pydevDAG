@@ -83,6 +83,15 @@ class Congruence(EdgeType):
 
 Congruence = Congruence() # pylint: disable=invalid-name
 
+class EnclosureBay(EdgeType):
+    """
+    Bay in an enclosure.
+    """
+    # pylint: disable=too-few-public-methods
+    pass
+
+EnclosureBay = EnclosureBay() # pylint: disable=invalid-name
+
 class EdgeTypes(AttributeValues):
     """
     Enumeration of edge types.
@@ -92,11 +101,13 @@ class EdgeTypes(AttributeValues):
     PARTITION = Partition
     SPINDLE = Spindle
     CONGRUENCE = Congruence
+    ENCLOSUREBAY = EnclosureBay
 
     @classmethod
     def values(cls):
         return [
            cls.CONGRUENCE,
+           cls.ENCLOSUREBAY,
            cls.PARTITION,
            cls.SLAVE,
            cls.SPINDLE

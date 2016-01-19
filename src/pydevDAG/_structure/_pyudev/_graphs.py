@@ -31,9 +31,13 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import os
+
 from itertools import chain
 
 import networkx as nx
+
+import pyudev
 
 from ._types import PyudevGraph
 from ._utils import SysfsTraversal
@@ -42,6 +46,8 @@ from .._utils import GraphMethods
 
 from ..._attributes import EdgeTypes
 from ..._attributes import NodeTypes
+
+from ..._errors import DAGEnvironmentError
 
 
 class SysfsGraphs(PyudevGraph):
@@ -219,6 +225,106 @@ class DMPartitionGraphs(PyudevGraph):
         return nx.compose_all(chain([nx.DiGraph()], graphs), name='congruence')
 
 
+class EnclosureGraphs(PyudevGraph):
+    """
+    Graph from enclosure to enclosed device.
+    """
+    # pylint: disable=too-few-public-methods
+
+    @staticmethod
+    def _components(context, device):
+        """
+        Get the components of this device.
+
+        :param Context context: a pyudev context
+        :param Device device: an enclosure device
+
+        :returns: a generate of component devices
+        :rtype: generator of Device
+        """
+        sys_path = device.sys_path
+        paths = (os.path.join(sys_path, name) for name in os.listdir(sys_path))
+        directories = (path for path in paths if os.path.isdir(path))
+        for directory in directories:
+            try:
+                dev = pyudev.Device.from_path(context, directory)
+            except pyudev.DeviceNotFoundError:
+                continue
+
+            # pylint: disable=fixme
+            # FIXME: in pyudev 0.19, do:
+            # if dev.subsystem is None:
+            #     yield dev
+            try:
+                dev.subsystem # pylint: disable=pointless-statement
+                continue
+            except AttributeError:
+                yield dev
+
+    @classmethod
+    def _enclosure_graph(cls, context, device):
+        """
+        Find the graph for each enclosure.
+
+        :param Context context: a pyudev context
+        :param Device device: a device, should be an enclosure device
+
+        :returns: a graph for this particular enclosure device
+        :rtype: DiGraph
+        """
+        graph = nx.DiGraph()
+        GraphMethods.add_nodes(
+           graph,
+           [device.device_path],
+           NodeTypes.DEVICE_PATH
+        )
+
+        for component in cls._components(context, device):
+            try:
+                dev = pyudev.Device.from_path(
+                   context,
+                   os.path.join(component.sys_path, 'device')
+                )
+            except pyudev.DeviceNotFoundError:
+                continue
+
+            block_children = list(
+               context.list_devices().match(
+                  parent=dev,
+                  subsystem='block',
+                  DEVTYPE='disk'
+               )
+            )
+
+            num_block_children = len(block_children)
+            if num_block_children == 0:
+                continue
+
+            if num_block_children > 1:
+                fmt_str = 'expected at most one child of device %s'
+                raise DAGEnvironmentError(fmt_str % dev)
+
+            block_child = block_children[0]
+
+            GraphMethods.add_edges(
+                graph,
+                [device.device_path],
+                [block_child.device_path],
+                EdgeTypes.ENCLOSUREBAY,
+                NodeTypes.DEVICE_PATH,
+                NodeTypes.DEVICE_PATH,
+                {'identifier' : component.sys_name}
+            )
+
+        return graph
+
+    @classmethod
+    def complete(cls, context, **kwargs):
+        enclosures = context.list_devices(subsystem="enclosure")
+        graphs = (cls._enclosure_graph(context, d) for d in enclosures)
+        return nx.compose_all(chain([nx.DiGraph()], graphs), name='enclosure')
+
+
 class PyudevGraphs(object):
     """
     Classes that build pyudev based graphs.
@@ -226,6 +332,7 @@ class PyudevGraphs(object):
     # pylint: disable=too-few-public-methods
 
     DM_PARTITION_GRAPHS = DMPartitionGraphs
+    ENCLOSURE_GRAPHS = EnclosureGraphs
     PARTITION_GRAPHS = PartitionGraphs
     SPINDLE_GRAPHS = SpindleGraphs
     SYSFS_BLOCK_GRAPHS = SysfsBlockGraphs
@@ -238,6 +345,7 @@ class PyudevGraphs(object):
         """
         return [
            cls.DM_PARTITION_GRAPHS,
+           cls.ENCLOSURE_GRAPHS,
            cls.PARTITION_GRAPHS,
            cls.SPINDLE_GRAPHS,
            cls.SYSFS_BLOCK_GRAPHS,

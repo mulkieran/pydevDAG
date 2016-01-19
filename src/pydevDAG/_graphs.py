@@ -67,6 +67,7 @@ class GenerateGraph(object):
         """
         graph_classes = [
            _structure.PyudevGraphs.DM_PARTITION_GRAPHS,
+           _structure.PyudevGraphs.ENCLOSURE_GRAPHS,
            _structure.PyudevGraphs.PARTITION_GRAPHS,
            _structure.PyudevGraphs.SPINDLE_GRAPHS,
            _structure.PyudevGraphs.SYSFS_BLOCK_GRAPHS
