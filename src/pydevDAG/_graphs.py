@@ -164,6 +164,10 @@ class PrintGraph(object):
            _print.NodeGetters.DEVNAME,
            _print.NodeGetters.IDENTIFIER
         ]
+        path_funcs = [
+           _print.NodeGetters.IDSASPATH,
+           _print.NodeGetters.IDPATH
+        ]
         line_info = _print.GraphLineInfo(
            graph,
            [
@@ -173,7 +177,6 @@ class PrintGraph(object):
               'DMTYPE',
               'DIFFSTATUS',
               'ID_PATH',
-              'ID_SAS_PATH',
               'SIZE'
            ],
            justification,
@@ -183,8 +186,7 @@ class PrintGraph(object):
               'DEVTYPE': [_print.NodeGetters.DEVTYPE],
               'DMTYPE': [_print.NodeGetters.DMUUIDPREFIX],
               'DIFFSTATUS': [_print.NodeGetters.DIFFSTATUS],
-              'ID_PATH' : [_print.NodeGetters.IDPATH],
-              'ID_SAS_PATH' : [_print.NodeGetters.IDSASPATH],
+              'ID_PATH' : path_funcs,
               'SIZE': [_print.NodeGetters.SIZE]
            }
         )
