@@ -94,7 +94,8 @@ class GenerateGraph(object):
            'DEVTYPE',
            'DM_UUID',
            'ID_PATH',
-           'ID_SAS_PATH'
+           'ID_SAS_PATH',
+           'SUBSYSTEM'
         ]
         table.update(UdevProperties.udev_properties(context, graph, properties))
 
