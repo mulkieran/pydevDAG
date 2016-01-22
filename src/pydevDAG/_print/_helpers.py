@@ -361,6 +361,31 @@ class Size(NodeGetter):
         return the_func
 
 
+class Subsystem(NodeGetter):
+    """
+    Get a SUBSYSTEM value for a node.
+    """
+    # pylint: disable=too-few-public-methods
+
+    map_requires = ['UDEV']
+
+    @staticmethod
+    def getter(maps):
+
+        def the_func(node):
+            """
+            Calculates a SUBSYSTEM.
+
+            :param node: the node
+            :returns: the value to display for ``node``
+            :rtype: str or NoneType
+            """
+            udev_info = maps['UDEV'].get(node)
+            return udev_info and udev_info.get('SUBSYSTEM')
+
+        return the_func
+
+
 class NodeGetters(object):
     """
     Class for managing NodeGetters.
@@ -378,3 +403,4 @@ class NodeGetters(object):
     IDPATH = IdPath
     IDSASPATH = IdSasPath
     SIZE = Size
+    SUBSYSTEM = Subsystem

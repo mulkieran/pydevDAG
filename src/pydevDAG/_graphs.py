@@ -174,6 +174,7 @@ class PrintGraph(object):
            [
               'NAME',
               'DEVNAME',
+              'SUBSYSTEM',
               'DEVTYPE',
               'DMTYPE',
               'DIFFSTATUS',
@@ -188,7 +189,8 @@ class PrintGraph(object):
               'DMTYPE': [_print.NodeGetters.DMUUIDPREFIX],
               'DIFFSTATUS': [_print.NodeGetters.DIFFSTATUS],
               'ID_PATH' : path_funcs,
-              'SIZE': [_print.NodeGetters.SIZE]
+              'SIZE': [_print.NodeGetters.SIZE],
+              'SUBSYSTEM': [_print.NodeGetters.SUBSYSTEM]
            }
         )
 
