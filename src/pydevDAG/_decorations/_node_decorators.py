@@ -224,3 +224,50 @@ class DevlinkValues(object):
             devlink_dict[node] = cls.values(context, node, categories)
 
         return {'DEVLINK' : devlink_dict}
+
+
+class Sysname(object):
+    """
+    Get the sysname for the object.
+    """
+
+    @staticmethod
+    def decorated(graph):
+        """
+        Returns elements that get decorated.
+        """
+        node_types = nx.get_node_attributes(graph, 'nodetype')
+        return (k for k in node_types \
+           if node_types[k] is NodeTypes.DEVICE_PATH)
+
+    @staticmethod
+    def value(context, element):
+        """
+        Get sysname for this element.
+
+        :returns: the sysname for the device if any
+        :rtype: str or NoneType
+        """
+        try:
+            device = pyudev.Device.from_path(context, element)
+        except pyudev.DeviceNotFoundError:
+            return None
+
+        return device.sys_name
+
+    @classmethod
+    def sysname(cls, context, graph):
+        """
+        Add sysname, if available.
+
+        :param `Context` context: the udev context
+        :param graph: the graph
+
+        :returns: dict of name, node, value
+        :rtype: dict of str * str * (str or NoneType)
+        """
+        sysname_dict = dict()
+        for node in cls.decorated(graph):
+            sysname_dict[node] = cls.value(context, node)
+
+        return {'SYSNAME' : sysname_dict}

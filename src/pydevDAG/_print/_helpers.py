@@ -386,6 +386,30 @@ class Subsystem(NodeGetter):
         return the_func
 
 
+class Sysname(NodeGetter):
+    """
+    Get a sysname value for a node.
+    """
+    # pylint: disable=too-few-public-methods
+
+    map_requires = ['SYSNAME']
+
+    @staticmethod
+    def getter(maps):
+
+        def the_func(node):
+            """
+            Calculates a SYSNAME.
+
+            :param node: the node
+            :returns: the value to display for ``node``
+            :rtype: str or NoneType
+            """
+            return maps['SYSNAME'].get(node)
+
+        return the_func
+
+
 class NodeGetters(object):
     """
     Class for managing NodeGetters.
@@ -404,3 +428,4 @@ class NodeGetters(object):
     IDSASPATH = IdSasPath
     SIZE = Size
     SUBSYSTEM = Subsystem
+    SYSNAME = Sysname

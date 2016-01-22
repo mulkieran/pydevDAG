@@ -42,6 +42,7 @@ from ._attributes import NodeTypes
 
 from ._decorations import Decorator
 from ._decorations import SysfsAttributes
+from ._decorations import Sysname
 from ._decorations import UdevProperties
 
 from . import _compare
@@ -104,6 +105,10 @@ class GenerateGraph(object):
            SysfsAttributes.sysfs_attributes(context, graph, attributes)
         )
 
+        table.update(
+           Sysname.sysname(context, graph)
+        )
+
         Decorator.decorate_nodes(graph, table)
 
 
@@ -163,6 +168,7 @@ class PrintGraph(object):
         name_funcs = [
            _print.NodeGetters.DMNAME,
            _print.NodeGetters.DEVNAME,
+           _print.NodeGetters.SYSNAME,
            _print.NodeGetters.IDENTIFIER
         ]
         path_funcs = [
