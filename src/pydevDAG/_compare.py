@@ -155,7 +155,15 @@ class Compare(object):
 
         :returns: True if the graphs are equivalent, otherwise False
         :rtype: bool
+
+        Note that two graphs are equivalent only if they possess an isomorphism
+        in both directions.
+
+        This can be checked cheaply by checking that both graphs have the same
+        number of nodes.
         """
+        if len(graph1) != len(graph2):
+            return False
         iso_iter = cls.isomorphisms_iter(
            graph1,
            graph2,
@@ -163,6 +171,7 @@ class Compare(object):
            edge_match
         )
         return next(iso_iter, None) is not None
+
 
 class Differences(object):
     """
