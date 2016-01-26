@@ -45,7 +45,7 @@ from ._decorations import SysfsAttributes
 from ._decorations import Sysname
 from ._decorations import UdevProperties
 
-from . import _compare
+from . import _comparison
 from . import _display
 from . import _print
 from . import _structure
@@ -235,28 +235,28 @@ class DiffGraph(object):
         :param `DiGraph` graph2: a graph
         :param str diff: the diff to perform
         """
-        node_matcher = _compare.Matcher(
+        node_matcher = _comparison.Matcher(
            ['identifier', 'nodetype'],
            ElementTypes.NODE
         )
         match_func = node_matcher.get_match
         edge_matcher = lambda g1, g2: lambda x, y: x == y
         if diff == "full":
-            return _compare.Differences.full_diff(
+            return _comparison.Differences.full_diff(
                graph1,
                graph2,
                match_func,
                edge_matcher
             )
         elif diff == "left":
-            return _compare.Differences.left_diff(
+            return _comparison.Differences.left_diff(
                graph1,
                graph2,
                match_func,
                edge_matcher
             )
         elif diff == "right":
-            return _compare.Differences.right_diff(
+            return _comparison.Differences.right_diff(
                graph1,
                graph2,
                match_func,
@@ -284,7 +284,7 @@ class CompareGraph(object):
         :returns: True if the graphs are equivalent, otherwise False
         :rtype: bool
         """
-        return _compare.Compare.is_equivalent(
+        return _comparison.Isomorphisms.is_equivalent(
            graph1,
            graph2,
            lambda x, y: x['nodetype'] is y['nodetype'],
@@ -304,12 +304,12 @@ class CompareGraph(object):
         :returns: True if the graphs are identical, otherwise False
         :rtype: boolean
         """
-        node_matcher = _compare.Matcher(
+        node_matcher = _comparison.Matcher(
            ['identifier', 'nodetype'],
            ElementTypes.NODE
         )
 
-        return _compare.Compare.is_equivalent(
+        return _comparison.Isomorphisms.is_equivalent(
            graph1,
            graph2,
            node_matcher.get_iso_match(),
@@ -378,7 +378,7 @@ class GraphIsomorphism(object):
             else:
                 return True
 
-        return _compare.Compare.isomorphisms_iter(
+        return _comparison.Isomorphisms.isomorphisms_iter(
            graph1,
            graph2,
            node_func,

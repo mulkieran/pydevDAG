@@ -71,14 +71,14 @@ class TestGraphComparison(object):
         with open(filepath, 'r') as infile:
             graph2 = pydevDAG.Reader.read(infile)
 
-        assert pydevDAG.Compare.is_equivalent(
+        assert pydevDAG.Isomorphisms.is_equivalent(
            graph1,
            graph2,
            node_matcher.get_iso_match(),
            edge_matcher.get_iso_match()
         )
 
-        isomorphisms_iter = pydevDAG.Compare.isomorphisms_iter(
+        isomorphisms_iter = pydevDAG.Isomorphisms.isomorphisms_iter(
            graph1,
            graph2,
            node_matcher.get_iso_match(),
@@ -137,7 +137,7 @@ class TestGraphDifference(object):
            graph2,
            self.NODE_MATCHER.get_match
         )
-        assert pydevDAG.Compare.is_equivalent(
+        assert pydevDAG.Isomorphisms.is_equivalent(
            full_diff,
            graph1,
            self.NODE_MATCHER.get_iso_match(),
@@ -154,7 +154,7 @@ class TestGraphDifference(object):
            graph2,
            self.NODE_MATCHER.get_match
         )
-        assert pydevDAG.Compare.is_equivalent(
+        assert pydevDAG.Isomorphisms.is_equivalent(
            left_diff,
            graph1,
            self.NODE_MATCHER.get_iso_match(),
@@ -171,7 +171,7 @@ class TestGraphDifference(object):
            graph2,
            self.NODE_MATCHER.get_match
         )
-        assert pydevDAG.Compare.is_equivalent(
+        assert pydevDAG.Isomorphisms.is_equivalent(
            right_diff,
            graph1,
            self.NODE_MATCHER.get_iso_match(),

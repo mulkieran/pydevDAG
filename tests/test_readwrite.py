@@ -68,7 +68,7 @@ class TestStringUtils(object):
         val = pydevDAG.StringUtils.as_string(DECORATED, pydevDAG.Writer.write)
         res = pydevDAG.StringUtils.from_string(val, pydevDAG.Reader.read)
 
-        assert pydevDAG.Compare.is_equivalent(
+        assert pydevDAG.Isomorphisms.is_equivalent(
            DECORATED,
            res,
            lambda x, y: x == y,

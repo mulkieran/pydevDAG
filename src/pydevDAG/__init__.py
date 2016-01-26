@@ -43,9 +43,9 @@ from ._decorations import Decorator
 from ._decorations import DifferenceMarkers
 from ._decorations import UdevProperties
 
-from ._compare import Compare
-from ._compare import Differences
-from ._compare import Matcher
+from ._comparison import Differences
+from ._comparison import Isomorphisms
+from ._comparison import Matcher
 
 from ._print import GraphLineArrangements
 from ._print import GraphLineArrangementsConfig
