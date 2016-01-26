@@ -44,7 +44,7 @@ ERROR_MESSAGE_UUID = uuid.UUID('b714a26219cc49fe9c6d70001197579b').hex
 
 MESSAGE_IDS = {
    ERROR_MESSAGE_UUID : ['MESSAGE', 'ERROR'],
-   MESSAGE_UUID : ['GRAPH']
+   MESSAGE_UUID : ['GRAPH', 'CLASSIFICATION']
 }
 
 def get_parser():
@@ -123,16 +123,42 @@ def _write_current(logdir, filename, graph):
         journal.sendv(*message)
 
 
-def _journal_current(graph):
+def _journal_current(graph, cmp_result):
     """
     Write a graph into the journal along with the MESSAGE_ID field.
+
+    :param DiGraph graph: the graph to write
+    :param int cmp_result: the result of the comparison with the previous
     """
     graph_string = pydevDAG.StringUtils.as_string(graph, pydevDAG.Writer.write)
     message = [
        "%s=%s" % ("GRAPH", graph_string),
-       "MESSAGE_ID=%s" % MESSAGE_UUID
+       "MESSAGE_ID=%s" % MESSAGE_UUID,
+       "CLASSIFICATION=%s" % ("equivalent" if cmp_result == 1 else "distinct")
     ]
     journal.sendv(*message)
+
+
+def _compare(graph, dirpath, filename):
+    """
+    Compare ``graph`` to previous, if any.
+
+    :param DiGraph graph: the current graph
+    :param str dirpath: path where previous graphs are stored
+    :param str filename: expected filename of previous graph
+
+    :returns: result of comparing graph to previous graph
+    :rtype: int
+
+    Result is 0 if graphs are identical, 1 if graphs are equivalent but not
+    identical (likely to occur as a result of a reboot), 2 if graphs are
+    neither equivalent nor identical. If no previous graph exists, return 2.
+    """
+    prev = _get_prev(dirpath, filename)
+    if prev is not None:
+        pydevDAG.GraphUtils.set_direction(prev, set_reversed=False, copy=False)
+        return pydevDAG.CompareGraph.compare(graph, prev)
+    return 2
 
 
 def main():
@@ -152,14 +178,12 @@ def main():
     graph = pydevDAG.GenerateGraph.get_graph(context, args.name)
     pydevDAG.GenerateGraph.decorate_graph(context, graph)
 
-    prev = _get_prev(args.dirpath, args.filename)
-    if prev is not None:
-        pydevDAG.GraphUtils.set_direction(prev, set_reversed=False, copy=False)
-        if pydevDAG.CompareGraph.identical(graph, prev):
-            return 0
+    cmp_result = _compare(graph, args.dirpath, args.filename)
+    if cmp_result == 0:
+        return 0
 
     _write_current(args.dirpath, args.filename, graph)
-    _journal_current(graph)
+    _journal_current(graph, cmp_result)
 
     return 0
 
