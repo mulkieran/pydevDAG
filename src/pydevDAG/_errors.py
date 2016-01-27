@@ -44,3 +44,9 @@ class DAGError(Exception):
 class DAGEnvironmentError(DAGError):
     """ A surprise in the environment in which the DAG is being constructed. """
     pass
+
+class DAGValueError(DAGError):
+    """
+    Raised if bad value passed.
+    """
+    pass

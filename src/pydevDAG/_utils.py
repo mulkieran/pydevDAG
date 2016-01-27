@@ -32,8 +32,11 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import functools
+import itertools
 
 import networkx as nx
+
+from ._errors import DAGValueError
 
 
 class GraphUtils(object):
@@ -161,3 +164,99 @@ class GeneralUtils(object):
         are missing.
         """
         return dict((k, v) for (k, v) in mapping.items() if k != v)
+
+
+class Dict(object):
+    """
+    Set or get the values of objects located in arbitrarily nested dicts.
+    """
+
+    @staticmethod
+    def get_value(tree, keys):
+        """
+        Get value.
+
+        :param dict tree: arbitrarily nested dict
+        :param keys: list of keys
+        :type keys: list of str
+        :returns: the result of traversing ``tree`` by means of ``keys``
+        :rtype: object
+        """
+        result = tree
+        for key in keys:
+            if key in result:
+                result = result[key]
+            else:
+                return None
+        return result
+
+
+    @classmethod
+    def get_values(cls, tree, keys):
+        """
+        Generate values for keys.
+
+        :param dict tree: arbitrarily nested dict
+        :param keys: the keys
+        :type keys: list of list of str
+
+        Yields in sequence, the values for each key, None if no value found.
+
+        Assumes that lists in keys are unique and sorted.
+        """
+        if keys == []:
+            return
+
+        if keys[0] == []:
+            keys = keys[1:]
+            yield tree
+
+        for (head, group) in itertools.groupby(keys, lambda x: x[0]):
+            try:
+                result = cls.get_values(
+                    tree.get(head),
+                    [k[1:] for k in group]
+                )
+                for val in result:
+                    yield val
+            except (TypeError, AttributeError):
+                for _ in group:
+                    yield None
+
+    @staticmethod
+    def set_value(tree, keys, value, force=False):
+        """
+        Set value.
+
+        :param dict tree: arbitrarily nested dict
+        :param keys: list of keys
+        :type keys: list of str
+        :param object value: the value to set
+        :param bool force: if True, make new empty dict entries if lookup fails
+
+        :raises DAGValueError: on bad parameters
+
+        Bad parameters are considered to have been passed if:
+        * An empty list of keys, don't know what to set.
+        * A prefix of the list yields a non-dict value.
+        """
+        if keys == []:
+            raise DAGValueError()
+        (first, last) = (keys[:-1], keys[-1])
+
+        lvalue = tree
+        for key in first:
+            try:
+                if key not in lvalue:
+                    if force:
+                        lvalue[key] = dict()
+                    else:
+                        raise DAGValueError()
+            except TypeError:
+                raise DAGValueError()
+            lvalue = lvalue[key]
+
+        try:
+            lvalue[last] = value
+        except TypeError:
+            raise DAGValueError()
