@@ -33,6 +33,10 @@ from __future__ import unicode_literals
 
 import networkx.algorithms.isomorphism as iso
 
+from .._attributes import ElementTypes
+
+from ._matcher import Matcher
+
 
 class Isomorphisms(object):
     """
@@ -86,3 +90,74 @@ class Isomorphisms(object):
            edge_match
         )
         return next(iso_iter, None) is not None
+
+
+class CompareGraph(object):
+    """
+    Compare graphs with boolean result.
+    """
+
+    @staticmethod
+    def equivalent(graph1, graph2):
+        """
+        Do ``graph1`` and ``graph2`` have the same shape?
+
+        The type of storage entity that a node represents is considered
+        significant, but not its identity.
+
+        :param `DiGraph` graph1: a graph
+        :param `DiGraph` graph2: a graph
+        :returns: True if the graphs are equivalent, otherwise False
+        :rtype: bool
+        """
+        return Isomorphisms.is_equivalent(
+           graph1,
+           graph2,
+           lambda x, y: x['nodetype'] is y['nodetype'],
+           lambda x, y: x['edgetype'] is y['edgetype']
+        )
+
+    @staticmethod
+    def identical(graph1, graph2):
+        """
+        Are ``graph1`` and ``graph2`` identical?
+
+        The identity of every node matters.
+
+        :param `DiGraph` graph1: a graph
+        :param `DiGraph` graph2: a graph
+
+        :returns: True if the graphs are identical, otherwise False
+        :rtype: boolean
+        """
+        node_matcher = Matcher(
+           ['identifier', 'nodetype'],
+           ElementTypes.NODE
+        )
+
+        return Isomorphisms.is_equivalent(
+           graph1,
+           graph2,
+           node_matcher.get_iso_match(),
+           lambda x, y: x['edgetype'] is y['edgetype']
+        )
+
+    @classmethod
+    def compare(cls, graph1, graph2):
+        """
+        Calculate relationship between ``graph1`` and ``graph2``.
+
+        :param `DiGraph` graph1: a graph
+        :param `DiGraph` graph2: a graph
+
+        :returns: 0 if identical, 1 if equivalent, otherwise 2
+        :rtype: int
+        """
+
+        if cls.identical(graph1, graph2):
+            return 0
+
+        if cls.equivalent(graph1, graph2):
+            return 1
+
+        return 2
