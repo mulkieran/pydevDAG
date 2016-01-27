@@ -29,6 +29,7 @@
 from ._difference import Differences
 
 from ._isomorphism import CompareGraph
+from ._isomorphism import Comparisons
 from ._isomorphism import Isomorphisms
 
 from ._matcher import Matcher

@@ -34,6 +34,7 @@ from __future__ import unicode_literals
 import networkx.algorithms.isomorphism as iso
 
 from .._attributes import ElementTypes
+from .._attributes import NodeTypes
 
 from ._matcher import Matcher
 
@@ -92,6 +93,36 @@ class Isomorphisms(object):
         return next(iso_iter, None) is not None
 
 
+class Comparisons(object):
+    """
+    Specialized comparisons for nodes and edges.
+    """
+    # pylint: disable=too-few-public-methods
+
+    @staticmethod
+    def persistant_names(node1, node2):
+        """
+        Two nodes are equivalent if they have the same node types and either
+        they have non-persistant identifier or their identifiers are equal.
+
+        :param node1: a dict of node attributes
+        :type node1: dict of str * object
+        :param node2: a dict of node attributes
+        :type node2: dict of str * object
+        :returns: True if nodes are eqivalent, otherwise False
+        :rtype: bool
+        """
+        nodetype = node1['nodetype']
+
+        if nodetype is not node2['nodetype']:
+            return False
+
+        if nodetype is NodeTypes.WWN:
+            return node1['identifier'] == node2['identifier']
+        else:
+            return True
+
+
 class CompareGraph(object):
     """
     Compare graphs with boolean result.
@@ -103,7 +134,8 @@ class CompareGraph(object):
         Do ``graph1`` and ``graph2`` have the same shape?
 
         The type of storage entity that a node represents is considered
-        significant, but not its identity.
+        significant, but not its identity, unless its identity is represented
+        by a persistant name.
 
         :param `DiGraph` graph1: a graph
         :param `DiGraph` graph2: a graph
@@ -113,7 +145,7 @@ class CompareGraph(object):
         return Isomorphisms.is_equivalent(
            graph1,
            graph2,
-           lambda x, y: x['nodetype'] is y['nodetype'],
+           Comparisons.persistant_names,
            lambda x, y: x['edgetype'] is y['edgetype']
         )
 

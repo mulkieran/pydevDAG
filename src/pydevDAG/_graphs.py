@@ -38,7 +38,6 @@ from collections import defaultdict
 import networkx as nx
 
 from ._attributes import ElementTypes
-from ._attributes import NodeTypes
 
 from ._decorations import Decorator
 from ._decorations import SysfsAttributes
@@ -288,29 +287,10 @@ class GraphIsomorphism(object):
         :rtype: generator of dict of node * node
         """
 
-        def node_func(node1, node2):
-            """
-            :param node1: a dict of node attributes
-            :type node1: dict of str * object
-            :param node2: a dict of node attributes
-            :type node2: dict of str * object
-            :returns: True if nodes are eqivalent, otherwise False
-            :rtype: bool
-            """
-            nodetype = node1['nodetype']
-
-            if nodetype is not node2['nodetype']:
-                return False
-
-            if nodetype is NodeTypes.WWN:
-                return node1['identifier'] == node2['identifier']
-            else:
-                return True
-
         return _comparison.Isomorphisms.isomorphisms_iter(
            graph1,
            graph2,
-           node_func,
+           _comparison.Comparisons.persistant_names,
            lambda x, y: x['edgetype'] is y['edgetype']
         )
 
