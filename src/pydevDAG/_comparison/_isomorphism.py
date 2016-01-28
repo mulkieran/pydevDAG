@@ -36,6 +36,8 @@ import networkx.algorithms.isomorphism as iso
 from .._attributes import ElementTypes
 from .._attributes import NodeTypes
 
+from .._utils import Dict
+
 from ._matcher import Matcher
 
 
@@ -93,34 +95,57 @@ class Isomorphisms(object):
         return next(iso_iter, None) is not None
 
 
-class Comparisons(object):
+class NodeComparison(object):
     """
-    Specialized comparisons for nodes and edges.
+    Compare nodes taking into account nodetype and designated attributes of
+    a node.
     """
     # pylint: disable=too-few-public-methods
 
-    @staticmethod
-    def persistant_names(node1, node2):
+    def __init__(self, keys):
         """
-        Two nodes are equivalent if they have the same node types and either
-        they have non-persistant identifier or their identifiers are equal.
+        Initializer.
 
-        :param node1: a dict of node attributes
-        :type node1: dict of str * object
-        :param node2: a dict of node attributes
-        :type node2: dict of str * object
-        :returns: True if nodes are eqivalent, otherwise False
-        :rtype: bool
+        :param keys: keys that are deemed persistant
+        :type keys: hash of list of list of str
+
+        Keys map nodetype values to lists of key sequences.
+
+        Nodetype value of None as key means for all keys.
+
+        Assumes that the keys for each nodetype are sorted as list.sort()
+        would sort them.
         """
-        nodetype = node1['nodetype']
+        self.keys = keys
 
-        if nodetype is not node2['nodetype']:
+    def equivalent(self, hash1, hash2):
+        """
+        Check equivalence given two hashes representing info about a node.
+        """
+        nodetype = hash1['nodetype']
+
+        if nodetype is not hash2['nodetype']:
             return False
 
-        if nodetype is NodeTypes.WWN:
-            return node1['identifier'] == node2['identifier']
-        else:
-            return True
+        keys = self.keys.get(None, [])
+
+        special_keys = self.keys.get(nodetype)
+        if special_keys is not None:
+            keys.extend(special_keys)
+
+        return Dict.get_values(hash1, keys) == Dict.get_values(hash2, keys)
+
+
+class Constants(object):
+    """
+    Any constants.
+    """
+    # pylint: disable=too-few-public-methods
+
+    PERSISTANT_ATTRIBUTES = {
+       NodeTypes.WWN : sorted([['SYSFS', 'subsystem'], ['UDEV', 'DEVTYPE']]),
+       NodeTypes.DEVICE_PATH : sorted([['identifier']])
+    }
 
 
 class CompareGraph(object):
@@ -145,7 +170,7 @@ class CompareGraph(object):
         return Isomorphisms.is_equivalent(
            graph1,
            graph2,
-           Comparisons.persistant_names,
+           NodeComparison(Constants.PERSISTANT_ATTRIBUTES).equivalent,
            lambda x, y: x['edgetype'] is y['edgetype']
         )
 

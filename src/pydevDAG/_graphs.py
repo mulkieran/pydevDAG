@@ -290,7 +290,7 @@ class GraphIsomorphism(object):
         return _comparison.Isomorphisms.isomorphisms_iter(
            graph1,
            graph2,
-           _comparison.Comparisons.persistant_names,
+           _comparison.NodeComparison([]).equivalent,
            lambda x, y: x['edgetype'] is y['edgetype']
         )
 
