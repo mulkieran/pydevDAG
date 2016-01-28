@@ -33,12 +33,9 @@ from __future__ import unicode_literals
 
 import networkx.algorithms.isomorphism as iso
 
-from .._attributes import ElementTypes
 from .._attributes import NodeTypes
 
 from .._utils import Dict
-
-from ._matcher import Matcher
 
 
 class Isomorphisms(object):
@@ -187,15 +184,11 @@ class CompareGraph(object):
         :returns: True if the graphs are identical, otherwise False
         :rtype: boolean
         """
-        node_matcher = Matcher(
-           ['identifier', 'nodetype'],
-           ElementTypes.NODE
-        )
 
         return Isomorphisms.is_equivalent(
            graph1,
            graph2,
-           node_matcher.get_iso_match(),
+           NodeComparison({None: [['identifier']]}).equivalent,
            lambda x, y: x['edgetype'] is y['edgetype']
         )
 
