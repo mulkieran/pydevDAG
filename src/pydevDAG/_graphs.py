@@ -32,6 +32,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import itertools
+import os
 
 from collections import defaultdict
 
@@ -39,10 +40,9 @@ import networkx
 
 from ._attributes import ElementTypes
 
-from ._decorations import Decorator
-from ._decorations import SysfsAttributes
-from ._decorations import Sysname
-from ._decorations import UdevProperties
+from ._decorations import NodeDecorator
+
+from ._config import _Config
 
 from . import _comparison
 from . import _display
@@ -79,36 +79,18 @@ class GenerateGraph(object):
         )
 
     @staticmethod
-    def decorate_graph(context, graph):
+    def decorate_graph(graph):
         """
         Decorate a graph with additional properties.
 
-        :param `Context` context: the libudev context
         :param `DiGraph` graph: the graph
         """
-        table = dict()
+        config = _Config(os.path.realpath('config.json'))
+        spec = config.get_node_decoration_spec()
+        decorator = NodeDecorator(spec)
 
-        properties = [
-           'DEVNAME',
-           'DEVPATH',
-           'DEVTYPE',
-           'DM_UUID',
-           'ID_PATH',
-           'ID_SAS_PATH',
-           'SUBSYSTEM'
-        ]
-        table.update(UdevProperties.udev_properties(context, graph, properties))
-
-        attributes = ['size', 'dm/name']
-        table.update(
-           SysfsAttributes.sysfs_attributes(context, graph, attributes)
-        )
-
-        table.update(
-           Sysname.sysname(context, graph)
-        )
-
-        Decorator.decorate_nodes(graph, table)
+        for node in graph.nodes():
+            decorator.decorate(node, graph.node[node])
 
 
 class DisplayGraph(object):

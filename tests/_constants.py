@@ -52,4 +52,4 @@ EITHERS = list(set(SLAVES).union(set(HOLDERS)))
 GRAPH = pydevDAG.GenerateGraph.get_graph(CONTEXT, "graph")
 
 DECORATED = pydevDAG.GenerateGraph.get_graph(CONTEXT, "graph")
-pydevDAG.GenerateGraph.decorate_graph(CONTEXT, DECORATED)
+pydevDAG.GenerateGraph.decorate_graph(DECORATED)

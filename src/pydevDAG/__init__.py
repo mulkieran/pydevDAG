@@ -39,8 +39,8 @@ from ._graphs import GraphIsomorphism
 from ._graphs import PrintGraph
 
 from ._decorations import Decorator
+from ._decorations import NodeDecorator
 from ._decorations import DifferenceMarkers
-from ._decorations import UdevProperties
 
 from ._comparison import CompareGraph
 from ._comparison import Differences

@@ -176,7 +176,7 @@ def main():
 
     context = pyudev.Context()
     graph = pydevDAG.GenerateGraph.get_graph(context, args.name)
-    pydevDAG.GenerateGraph.decorate_graph(context, graph)
+    pydevDAG.GenerateGraph.decorate_graph(graph)
 
     cmp_result = _compare(graph, args.dirpath, args.filename)
     if cmp_result == 0:
