@@ -42,9 +42,10 @@ import networkx as nx
 
 import pyudev
 
+from pyudev._parsing._devlink import Devlink
+
 from pydevDAG._attributes import NodeTypes
 
-from ._devlink import Devlink
 
 class UdevProperties(object):
     """
@@ -194,6 +195,7 @@ class DevlinkValues(object):
 
         result = dict.fromkeys(categories)
 
+        # pylint: disable=protected-access
         devlinks = sorted(
            (Devlink(d) for d in device.device_links),
            key=key_func

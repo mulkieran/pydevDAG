@@ -29,8 +29,6 @@ from ._decorations import Decorator
 
 from ._decorators import DifferenceMarkers
 
-from ._devlink import Devlink
-
 from ._node_decorators import DevlinkValues
 from ._node_decorators import SysfsAttributes
 from ._node_decorators import Sysname
