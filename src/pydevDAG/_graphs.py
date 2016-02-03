@@ -35,7 +35,7 @@ import itertools
 
 from collections import defaultdict
 
-import networkx as nx
+import networkx
 
 from ._attributes import ElementTypes
 
@@ -127,7 +127,7 @@ class DisplayGraph(object):
 
         Designate its general layout and mark or rearrange nodes as appropriate.
         """
-        dot_graph = nx.to_agraph(graph)
+        dot_graph = networkx.to_agraph(graph) # pylint: disable=no-member
         dot_graph.graph_attr.update(rankdir="LR")
         dot_graph.layout(prog="dot")
 
