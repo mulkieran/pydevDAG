@@ -38,8 +38,8 @@ import pytest
 
 from hypothesis import assume
 from hypothesis import given
+from hypothesis import settings
 from hypothesis import strategies
-from hypothesis import Settings
 
 import pydevDAG
 
@@ -87,9 +87,9 @@ class TestDict(object):
 
     @given(
         strategies.lists(elements=strategies.text(), max_size=7, min_size=1),
-        strategies.integers(),
-        settings=Settings(max_examples=20)
+        strategies.integers()
     )
+    @settings(max_examples=20)
     def test_set_and_get(self, keys, value):
         """
         Test basic getting and setting.
@@ -136,9 +136,9 @@ class TestDict(object):
             max_size=7,
             min_size=1
         ),
-        strategies.integers(),
-        settings=Settings(max_examples=20)
+        strategies.integers()
     )
+    @settings(max_examples=20)
     def test_get_values(self, keys, value):
         """
         Test getting and setting.

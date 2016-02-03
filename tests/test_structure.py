@@ -39,8 +39,8 @@ import pydevDAG
 import pytest
 
 from hypothesis import given
+from hypothesis import settings
 from hypothesis import strategies
-from hypothesis import Settings
 
 from ._constants import CONTEXT
 from ._constants import EITHERS
@@ -50,59 +50,43 @@ NUM_TESTS = 5
 # Use conditional to avoid processing tests if number of examples is too small.
 # pytest.mark.skipif allows the test to be built, resulting in a hypothesis
 # error if SLAVES or HOLDERS is empty.
-if len(EITHERS) == 0:
-    @pytest.mark.skipif(
-       True,
-       reason="no slaves or holders data for tests"
-    )
-    class TestSysfsTraversal(object):
-        # pylint: disable=too-few-public-methods
+@pytest.mark.skipif(
+   len(EITHERS) == 0,
+   reason="no slaves or holders data for tests"
+)
+class TestSysfsTraversal(object):
+    """
+    A class for testing graphs generated entirely from sysfs traversals.
+    """
+    @given(strategies.sampled_from(EITHERS))
+    @settings(max_examples=NUM_TESTS, min_satisfying_examples=1)
+    def test_slaves(self, device):
         """
-        An empty test class which is always skipped.
-        """
-        def test_dummy(self):
-            """
-            A dummy test, for which pytest can show a skip message.
-            """
-            pass
-else:
-    class TestSysfsTraversal(object):
-        """
-        A class for testing graphs generated entirely from sysfs traversals.
-        """
-        @given(
-           strategies.sampled_from(EITHERS),
-           settings=Settings(max_examples=NUM_TESTS)
-        )
-        def test_slaves(self, device):
-            """
-            Verify slaves graph has same number of nodes as traversal.
+        Verify slaves graph has same number of nodes as traversal.
 
-            Traversal may contain duplicates, while graph should eliminate
-            duplicates during its construction. Traversal results does not
-            include origin device, graph nodes do.
-            """
-            slaves = list(pydevDAG.slaves(CONTEXT, device))
-            graph = pydevDAG.SysfsTraversal.slaves(CONTEXT, device)
-            graph_len = len(graph)
-            assert len(set(slaves)) == (graph_len - 1 if graph_len else 0)
+        Traversal may contain duplicates, while graph should eliminate
+        duplicates during its construction. Traversal results does not
+        include origin device, graph nodes do.
+        """
+        slaves = list(pydevDAG.slaves(CONTEXT, device))
+        graph = pydevDAG.SysfsTraversal.slaves(CONTEXT, device)
+        graph_len = len(graph)
+        assert len(set(slaves)) == (graph_len - 1 if graph_len else 0)
 
-        @given(
-           strategies.sampled_from(EITHERS),
-           settings=Settings(max_examples=NUM_TESTS)
-        )
-        def test_holders(self, device):
-            """
-            Verify holders graph has same number of nodes as traversal.
+    @given(strategies.sampled_from(EITHERS))
+    @settings(max_examples=NUM_TESTS, min_satisfying_examples=1)
+    def test_holders(self, device):
+        """
+        Verify holders graph has same number of nodes as traversal.
 
-            Traversal may contain duplicates, while graph should eliminate
-            duplicates during its construction. Traversal results does not
-            include origin device, graph nodes do.
-            """
-            holders = list(pydevDAG.holders(CONTEXT, device))
-            graph = pydevDAG.SysfsTraversal.holders(CONTEXT, device)
-            graph_len = len(graph)
-            assert len(set(holders)) == (graph_len - 1 if graph_len else 0)
+        Traversal may contain duplicates, while graph should eliminate
+        duplicates during its construction. Traversal results does not
+        include origin device, graph nodes do.
+        """
+        holders = list(pydevDAG.holders(CONTEXT, device))
+        graph = pydevDAG.SysfsTraversal.holders(CONTEXT, device)
+        graph_len = len(graph)
+        assert len(set(holders)) == (graph_len - 1 if graph_len else 0)
 
 class TestSysfsGraphs(object):
     """

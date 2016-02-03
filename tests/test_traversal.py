@@ -37,8 +37,8 @@ import pydevDAG
 import pytest
 
 from hypothesis import given
+from hypothesis import settings
 from hypothesis import strategies
-from hypothesis import Settings
 
 from ._constants import BOTHS
 from ._constants import CONTEXT
@@ -48,74 +48,52 @@ from ._constants import SLAVES
 
 NUM_TESTS = 5
 
-# Use conditional to avoid processing tests if number of examples is too small.
-# pytest.mark.skipif allows the test to be built, resulting in a hypothesis
-# error if SLAVES or HOLDERS is empty.
-if len(BOTHS) == 0:
-    @pytest.mark.skipif(
-       True,
-       reason="no slaves or holders data for tests"
-    )
-    class TestTraversal(object):
-        # pylint: disable=too-few-public-methods
+@pytest.mark.skipif(
+   len(BOTHS) == 0,
+   reason="no slaves or holders data for tests"
+)
+class TestTraversal(object):
+    """
+    A class for testing sysfs traversals.
+    """
+    @given(strategies.sampled_from(SLAVES))
+    @settings(max_examples=NUM_TESTS, min_satisfying_examples=1)
+    def test_slaves(self, device):
         """
-        An empty test class which is always skipped.
+        Verify slaves do not contain originating device.
         """
-        def test_dummy(self):
-            """
-            A dummy test, for which pytest can show a skip message.
-            """
-            pass
-else:
-    class TestTraversal(object):
+        assert device not in pydevDAG.slaves(CONTEXT, device)
+
+    @given(strategies.sampled_from(HOLDERS))
+    @settings(max_examples=NUM_TESTS, min_satisfying_examples=1)
+    def test_holders(self, device):
         """
-        A class for testing sysfs traversals.
+        Verify holders do not contain originating device.
         """
-        @given(
-           strategies.sampled_from(SLAVES),
-           settings=Settings(max_examples=NUM_TESTS)
-        )
-        def test_slaves(self, device):
-            """
-            Verify slaves do not contain originating device.
-            """
-            assert device not in pydevDAG.slaves(CONTEXT, device)
+        assert device not in pydevDAG.holders(CONTEXT, device)
 
-        @given(
-           strategies.sampled_from(HOLDERS),
-           settings=Settings(max_examples=NUM_TESTS)
-        )
-        def test_holders(self, device):
-            """
-            Verify holders do not contain originating device.
-            """
-            assert device not in pydevDAG.holders(CONTEXT, device)
+    @given(strategies.sampled_from(EITHERS), strategies.booleans())
+    @settings(max_examples=2 * NUM_TESTS, min_satisfying_examples=1)
+    def test_inverse(self, device, recursive):
+        """
+        Verify that a round-trip traversal will encounter the original
+        device.
 
-        @given(
-           strategies.sampled_from(EITHERS),
-           strategies.booleans(),
-           settings=Settings(max_examples=2 * NUM_TESTS)
-        )
-        def test_inverse(self, device, recursive):
-            """
-            Verify that a round-trip traversal will encounter the original
-            device.
+        :param device: the device to test
+        :param bool recursive: if True, test recursive relationship
 
-            :param device: the device to test
-            :param bool recursive: if True, test recursive relationship
+        If recursive is True, test ancestor/descendant relationship.
+        If recursive is False, tests parent/child relationship.
+        """
+        # pylint: disable=too-many-function-args
+        slaves = list(pydevDAG.slaves(CONTEXT, device, recursive))
+        for slave in slaves:
+            assert device in list(
+               pydevDAG.holders(CONTEXT, slave, recursive)
+            )
 
-            If recursive is True, test ancestor/descendant relationship.
-            If recursive is False, tests parent/child relationship.
-            """
-            # pylint: disable=too-many-function-args
-            slaves = list(pydevDAG.slaves(CONTEXT, device, recursive))
-            for slave in slaves:
-                assert device in list(
-                   pydevDAG.holders(CONTEXT, slave, recursive)
-                )
-
-            holders = list(pydevDAG.holders(CONTEXT, device, recursive))
-            for holder in holders:
-                assert device in list(
-                   pydevDAG.slaves(CONTEXT, holder, recursive)
-                )
+        holders = list(pydevDAG.holders(CONTEXT, device, recursive))
+        for holder in holders:
+            assert device in list(
+               pydevDAG.slaves(CONTEXT, holder, recursive)
+            )
