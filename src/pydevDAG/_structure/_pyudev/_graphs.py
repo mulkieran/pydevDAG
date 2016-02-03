@@ -251,14 +251,7 @@ class EnclosureGraphs(PyudevGraph):
             except pyudev.DeviceNotFoundError:
                 continue
 
-            # pylint: disable=fixme
-            # FIXME: in pyudev 0.19, do:
-            # if dev.subsystem is None:
-            #     yield dev
-            try:
-                dev.subsystem # pylint: disable=pointless-statement
-                continue
-            except AttributeError:
+            if dev.subsystem is None:
                 yield dev
 
     @classmethod
