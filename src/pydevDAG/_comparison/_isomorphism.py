@@ -35,7 +35,7 @@ import networkx.algorithms.isomorphism as iso
 
 from .._attributes import NodeTypes
 
-from .._utils import Dict
+from .._utils import ExtendedLookup
 
 
 class Isomorphisms(object):
@@ -114,6 +114,7 @@ class NodeComparison(object):
         would sort them.
         """
         self.keys = keys
+        self.lookups = dict()
 
     def equivalent(self, hash1, hash2):
         """
@@ -124,13 +125,16 @@ class NodeComparison(object):
         if nodetype is not hash2['nodetype']:
             return False
 
-        keys = self.keys.get(None, [])
+        getter = self.lookups.get(nodetype)
+        if getter is None:
+            keys = self.keys.get(None, [])
 
-        special_keys = self.keys.get(nodetype)
-        if special_keys is not None:
-            keys.extend(special_keys)
+            special_keys = self.keys.get(nodetype)
+            if special_keys is not None:
+                keys.extend(special_keys)
+            getter = self.lookups[nodetype] = ExtendedLookup(keys)
 
-        return Dict.get_values(hash1, keys) == Dict.get_values(hash2, keys)
+        return list(getter.get_values(hash1)) == list(getter.get_values(hash2))
 
 
 class Constants(object):
@@ -141,7 +145,7 @@ class Constants(object):
 
     PERSISTANT_ATTRIBUTES = {
        NodeTypes.DEVICE_PATH : \
-          sorted([['SYSFS', 'subsystem'], ['UDEV', 'DEVTYPE']]),
+          sorted([['UDEV', 'SUBSYSTEM'], ['UDEV', 'DEVTYPE']]),
        NodeTypes.WWN : sorted([['identifier']])
     }
 

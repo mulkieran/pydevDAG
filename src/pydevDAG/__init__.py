@@ -72,3 +72,4 @@ from ._traversal import slaves
 
 from ._utils import GraphUtils
 from ._utils import Dict
+from ._utils import ExtendedLookup

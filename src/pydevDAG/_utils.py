@@ -190,39 +190,6 @@ class Dict(object):
                 return None
         return result
 
-
-    @classmethod
-    def get_values(cls, tree, keys):
-        """
-        Generate values for keys.
-
-        :param dict tree: arbitrarily nested dict
-        :param keys: the keys
-        :type keys: list of list of str
-
-        Yields in sequence, the values for each key, None if no value found.
-
-        Assumes that lists in keys are unique and sorted.
-        """
-        if keys == []:
-            return
-
-        if keys[0] == []:
-            keys = keys[1:]
-            yield tree
-
-        for (head, group) in itertools.groupby(keys, lambda x: x[0]):
-            try:
-                result = cls.get_values(
-                    tree.get(head),
-                    [k[1:] for k in group]
-                )
-                for val in result:
-                    yield val
-            except (TypeError, AttributeError):
-                for _ in group:
-                    yield None
-
     @staticmethod
     def set_value(tree, keys, value, force=False):
         """
@@ -260,3 +227,62 @@ class Dict(object):
             lvalue[last] = value
         except TypeError:
             raise DAGValueError()
+
+
+class ExtendedLookup(object):
+    """
+    Get the result of looking at multiple attributes of a node at once.
+    """
+    # pylint: disable=too-few-public-methods
+
+    def __init__(self, keys):
+        """
+        Initializer.
+
+        :param keys: the keys
+        :type keys: list of list of str
+        """
+        self.keys = sorted(keys)
+
+    def get_values(self, tree):
+        """
+        Generate values for keys.
+
+        :param dict tree: arbitrarily nested dict
+
+        Yields in sequence, the values for each key, None if no value found.
+        """
+        return self._get_values(tree, self.keys[:])
+
+    def _get_values(self, tree, keys):
+        """
+        Generate values for keys.
+
+        :param dict tree: arbitrarily nested dict
+        :param keys: the keys
+        :type keys: list of list of str
+
+        Yields in sequence, the values for each key, None if no value found.
+
+        Assumes no duplicate keys.
+        """
+
+        if keys == []:
+            return
+
+        if keys[0] == []:
+            keys = keys[1:]
+            yield tree
+
+        for (head, group) in itertools.groupby(keys, lambda x: x[0]):
+            try:
+                result = self._get_values(
+                    tree.get(head),
+                    [k[1:] for k in group]
+                )
+                for val in result:
+                    yield val
+            except (TypeError, AttributeError):
+                for _ in group:
+                    yield None
+

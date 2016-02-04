@@ -160,12 +160,12 @@ class TestDict(object):
             except pydevDAG.DAGError:
                 return
 
-        result = list(pydevDAG.Dict.get_values(table, keys))
+        result = list(pydevDAG.ExtendedLookup(keys).get_values(table))
         assert len(result) == len(keys)
         assert len(set(result)) == 1 and result[0] == value
 
         unknown_key = functools.reduce(list.__add__, keys, [keys[0]])
-        result = list(pydevDAG.Dict.get_values(table, [unknown_key]))
+        result = list(pydevDAG.ExtendedLookup([unknown_key]).get_values(table))
         assert all(x is None for x in result)
         assert len(result) == 1
 
@@ -174,4 +174,4 @@ class TestDict(object):
         Test what would be exceptions if an empty list did not sometimes
         mean the same thing.
         """
-        assert list(pydevDAG.Dict.get_values(None, [])) == []
+        assert list(pydevDAG.ExtendedLookup([]).get_values(None)) == []
