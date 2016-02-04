@@ -140,8 +140,9 @@ class Constants(object):
     # pylint: disable=too-few-public-methods
 
     PERSISTANT_ATTRIBUTES = {
-       NodeTypes.WWN : sorted([['SYSFS', 'subsystem'], ['UDEV', 'DEVTYPE']]),
-       NodeTypes.DEVICE_PATH : sorted([['identifier']])
+       NodeTypes.DEVICE_PATH : \
+          sorted([['SYSFS', 'subsystem'], ['UDEV', 'DEVTYPE']]),
+       NodeTypes.WWN : sorted([['identifier']])
     }
 
 
