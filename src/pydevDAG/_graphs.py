@@ -92,6 +92,8 @@ class GenerateGraph(object):
         for node in graph.nodes():
             decorator.decorate(node, graph.node[node])
 
+        graph.graph['decorations'] = spec
+
 
 class DisplayGraph(object):
     """
