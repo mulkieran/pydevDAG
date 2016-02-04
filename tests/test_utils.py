@@ -165,9 +165,8 @@ class TestDict(object):
         assert len(set(result)) == 1 and result[0] == value
 
         unknown_key = functools.reduce(list.__add__, keys, [keys[0]])
-        result = list(pydevDAG.ExtendedLookup([unknown_key]).get_values(table))
-        assert all(x is None for x in result)
-        assert len(result) == 1
+        with pytest.raises(pydevDAG.DAGError):
+            list(pydevDAG.ExtendedLookup([unknown_key]).get_values(table))
 
     def test_get_values_simple(self):
         """

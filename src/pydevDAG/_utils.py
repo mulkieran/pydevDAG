@@ -261,6 +261,7 @@ class ExtendedLookup(object):
         :param dict tree: arbitrarily nested dict
         :param keys: the keys
         :type keys: list of list of str
+        :raises DAGValueError: if any key not found
 
         Yields in sequence, the values for each key, None if no value found.
 
@@ -276,13 +277,9 @@ class ExtendedLookup(object):
 
         for (head, group) in itertools.groupby(keys, lambda x: x[0]):
             try:
-                result = self._get_values(
-                    tree.get(head),
-                    [k[1:] for k in group]
-                )
-                for val in result:
+                subtree = tree.get(head)
+            except (TypeError, AttributeError) as err:
+                raise DAGValueError(err)
+            else:
+                for val in self._get_values(subtree, [k[1:] for k in group]):
                     yield val
-            except (TypeError, AttributeError):
-                for _ in group:
-                    yield None
-
