@@ -106,9 +106,6 @@ class TestSysfsGraphs(object):
            CONTEXT,
            subsystem="block"
         )
-        devs = list(CONTEXT.list_devices(subsystem="block"))
-        assert nx.number_of_nodes(graph) == len(set(devs))
-        assert set(nx.nodes(graph)) == set(d.device_path for d in devs)
 
         types = nx.get_node_attributes(graph, "nodetype")
         assert all(t is pydevDAG.NodeTypes.DEVICE_PATH for t in types.values())
