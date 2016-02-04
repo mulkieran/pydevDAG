@@ -105,7 +105,8 @@ class Pyudev(Domain):
             return
 
         for obj in self.objects:
-            obj.decorate(device, attrdict)
+            if obj.decoratable(attrdict):
+                obj.decorate(device, attrdict)
 
 
 @six.add_metaclass(abc.ABCMeta)
