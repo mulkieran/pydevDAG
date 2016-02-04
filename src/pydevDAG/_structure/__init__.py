@@ -18,21 +18,14 @@
 # Red Hat Author(s): Anne Mulhern <amulhern@redhat.com>
 
 """
-    pydevDAG._print
-    ===============
+    pydevDAG._structure
+    ===================
 
-    Printing facilities for graphs.
+    Facilities for building graphs.
 
     .. moduleauthor::  Anne Mulhern  <amulhern@redhat.com>
 """
-from ._graph import GraphLineArrangements
-from ._graph import GraphLineArrangementsConfig
-from ._graph import GraphLineInfo
-from ._graph import GraphXformLines
 
-from ._mapping import MapLineInfos
-
-from ._print import Print
-
-from ._helpers import NodeGetter
-from ._helpers import NodeGetters
+from ._pyudev import PyudevGraphs
+from ._pyudev import PyudevAggregateGraph
+from ._pyudev import SysfsTraversal

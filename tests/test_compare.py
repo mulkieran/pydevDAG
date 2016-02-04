@@ -36,6 +36,8 @@ import networkx as nx
 
 import pydevDAG
 
+from pydevDAG import ElementTypes
+
 from ._constants import GRAPH
 
 
@@ -47,10 +49,17 @@ class TestGraphComparison(object):
 
     def test_equal(self, tmpdir):
         """
-        Verify that two identical graphs are equivalent.
+        Verify that two identical graphs are equivalent and that they
+        have at least one identity isomorphism.
         """
-        node_matcher = pydevDAG.Matcher(['identifier', 'nodetype'], 'node')
-        edge_matcher = pydevDAG.Matcher(['edgetype'], 'edge')
+        node_matcher = pydevDAG.Matcher(
+           ['identifier', 'nodetype'],
+           ElementTypes.NODE
+        )
+        edge_matcher = pydevDAG.Matcher(
+           ['edgetype'],
+           ElementTypes.EDGE
+        )
 
         new_graph = GRAPH.copy()
         filepath = str(tmpdir.join('test.gml'))
@@ -62,11 +71,23 @@ class TestGraphComparison(object):
         with open(filepath, 'r') as infile:
             graph2 = pydevDAG.Reader.read(infile)
 
-        assert pydevDAG.Compare.is_equivalent(
+        assert pydevDAG.Isomorphisms.is_equivalent(
            graph1,
            graph2,
            node_matcher.get_iso_match(),
            edge_matcher.get_iso_match()
+        )
+
+        isomorphisms_iter = pydevDAG.Isomorphisms.isomorphisms_iter(
+           graph1,
+           graph2,
+           node_matcher.get_iso_match(),
+           edge_matcher.get_iso_match()
+        )
+
+        assert any(
+           all(x == isomorphism[x] for x in isomorphism) \
+           for isomorphism in isomorphisms_iter
         )
 
 
@@ -75,8 +96,14 @@ class TestGraphDifference(object):
     Test ability to find differences among graphs.
     """
 
-    NODE_MATCHER = pydevDAG.Matcher(['identifier', 'nodetype'], 'node')
-    EDGE_MATCHER = pydevDAG.Matcher(['edgetype'], 'edge')
+    NODE_MATCHER = pydevDAG.Matcher(
+       ['identifier', 'nodetype'],
+       ElementTypes.NODE
+    )
+    EDGE_MATCHER = pydevDAG.Matcher(
+       ['edgetype'],
+       ElementTypes.EDGE
+    )
 
     def test_equal(self, tmpdir):
         """
@@ -110,7 +137,7 @@ class TestGraphDifference(object):
            graph2,
            self.NODE_MATCHER.get_match
         )
-        assert pydevDAG.Compare.is_equivalent(
+        assert pydevDAG.Isomorphisms.is_equivalent(
            full_diff,
            graph1,
            self.NODE_MATCHER.get_iso_match(),
@@ -127,7 +154,7 @@ class TestGraphDifference(object):
            graph2,
            self.NODE_MATCHER.get_match
         )
-        assert pydevDAG.Compare.is_equivalent(
+        assert pydevDAG.Isomorphisms.is_equivalent(
            left_diff,
            graph1,
            self.NODE_MATCHER.get_iso_match(),
@@ -144,7 +171,7 @@ class TestGraphDifference(object):
            graph2,
            self.NODE_MATCHER.get_match
         )
-        assert pydevDAG.Compare.is_equivalent(
+        assert pydevDAG.Isomorphisms.is_equivalent(
            right_diff,
            graph1,
            self.NODE_MATCHER.get_iso_match(),

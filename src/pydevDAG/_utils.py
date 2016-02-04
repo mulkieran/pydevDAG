@@ -32,8 +32,11 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import functools
+import itertools
 
 import networkx as nx
+
+from ._errors import DAGValueError
 
 
 class GraphUtils(object):
@@ -54,12 +57,50 @@ class GraphUtils(object):
         """
         return [n for n in graph if not nx.ancestors(graph, n)]
 
+    @staticmethod
+    def reverse(graph, copy=True):
+        """
+        Reverse a graph and indicate its status.
 
-class SortingUtils(object):
+        :param `DiGraph` graph: the graph
+        :param bool copy: if True, make a new copy of the graph
+        :returns: a reversed graph
+        :rtype: `DiGraph`
+        """
+        key = 'reversed'
+        graph = graph.reverse(copy=copy)
+        try:
+            graph.graph[key] = not graph.graph[key]
+        except KeyError:
+            graph.graph[key] = True
+        return graph
+
+    @classmethod
+    def set_direction(cls, graph, set_reversed=False, copy=True):
+        """
+        Set a graph's direction.
+
+        :param `DiGraph` graph: the graph
+        :param bool set_reversed: if True, direction is reversed
+        :param bool copy: if True, make a new copy of the graph
+        :returns: a reversed graph
+        :rtype: `DiGraph`
+        """
+        try:
+            is_reversed = graph.graph['reversed']
+        except KeyError:
+            is_reversed = False
+
+        if set_reversed != is_reversed:
+            graph = cls.reverse(graph, copy=copy)
+
+        return graph
+
+
+class GeneralUtils(object):
     """
-    Utilities helpful for sorting.
+    General purpose utilities.
     """
-    # pylint: disable=too-few-public-methods
 
     @staticmethod
     def str_key_func_gen(func):
@@ -84,3 +125,138 @@ class SortingUtils(object):
             return '' if res is None else str(res)
 
         return key_func
+
+    @staticmethod
+    def composer(funcs):
+        """
+        Composes a list of funcs into a single func.
+
+        :param funcs: the functions
+        :type funcs: list of (* -> (str or NoneType))
+
+        :returns: a function to find a value for a node
+        :rtype: * -> (str or NoneType)
+        """
+        def the_func(node):
+            """
+            Returns a value for the node.
+            :param * node: a node
+            :returns: a value
+            :rtype: str or NoneType
+            """
+            return functools.reduce(
+               lambda v, f: v if v is not None else f(node),
+               funcs,
+               None
+            )
+        return the_func
+
+    @staticmethod
+    def minimize_mapping(mapping):
+        """
+        Return a minimized version of ``mapping``.
+
+        :param dict mapping: any mapping
+        :returns: a minimized mapping
+        :rtype: dict
+
+        The new mapping is the same, except that all instances where k == v
+        are missing.
+        """
+        return dict((k, v) for (k, v) in mapping.items() if k != v)
+
+
+class Dict(object):
+    """
+    Set or get the values of objects located in arbitrarily nested dicts.
+    """
+
+    @staticmethod
+    def get_value(tree, keys):
+        """
+        Get value.
+
+        :param dict tree: arbitrarily nested dict
+        :param keys: list of keys
+        :type keys: list of str
+        :returns: the result of traversing ``tree`` by means of ``keys``
+        :rtype: object
+        """
+        result = tree
+        for key in keys:
+            if key in result:
+                result = result[key]
+            else:
+                return None
+        return result
+
+
+    @classmethod
+    def get_values(cls, tree, keys):
+        """
+        Generate values for keys.
+
+        :param dict tree: arbitrarily nested dict
+        :param keys: the keys
+        :type keys: list of list of str
+
+        Yields in sequence, the values for each key, None if no value found.
+
+        Assumes that lists in keys are unique and sorted.
+        """
+        if keys == []:
+            return
+
+        if keys[0] == []:
+            keys = keys[1:]
+            yield tree
+
+        for (head, group) in itertools.groupby(keys, lambda x: x[0]):
+            try:
+                result = cls.get_values(
+                    tree.get(head),
+                    [k[1:] for k in group]
+                )
+                for val in result:
+                    yield val
+            except (TypeError, AttributeError):
+                for _ in group:
+                    yield None
+
+    @staticmethod
+    def set_value(tree, keys, value, force=False):
+        """
+        Set value.
+
+        :param dict tree: arbitrarily nested dict
+        :param keys: list of keys
+        :type keys: list of str
+        :param object value: the value to set
+        :param bool force: if True, make new empty dict entries if lookup fails
+
+        :raises DAGValueError: on bad parameters
+
+        Bad parameters are considered to have been passed if:
+        * An empty list of keys, don't know what to set.
+        * A prefix of the list yields a non-dict value.
+        """
+        if keys == []:
+            raise DAGValueError()
+        (first, last) = (keys[:-1], keys[-1])
+
+        lvalue = tree
+        for key in first:
+            try:
+                if key not in lvalue:
+                    if force:
+                        lvalue[key] = dict()
+                    else:
+                        raise DAGValueError()
+            except TypeError:
+                raise DAGValueError()
+            lvalue = lvalue[key]
+
+        try:
+            lvalue[last] = value
+        except TypeError:
+            raise DAGValueError()

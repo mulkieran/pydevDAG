@@ -35,7 +35,7 @@ import abc
 
 import six
 
-import bytesize
+import justbytes
 
 from pydevDAG._attributes import DiffStatuses
 
@@ -223,6 +223,39 @@ class Dmname(NodeGetter):
         return the_func
 
 
+class DmUuidPrefix(NodeGetter):
+    """
+    Get the DMUUID prefix.
+    """
+    # pylint: disable=too-few-public-methods
+
+    map_requires = ['UDEV']
+
+    @staticmethod
+    def getter(maps):
+
+        def the_func(node):
+            """
+            Calculates the dm-uuid-prefix.
+
+            :param node: the node
+            :returns: the value to display for ``node``
+            :rtype: str or NoneType
+            """
+            udev_info = maps['UDEV'].get(node)
+            if udev_info is None:
+                return None
+            dmuuid = udev_info.get('DM_UUID')
+            if dmuuid is None:
+                return None
+            (dmcat, dash, _) = dmuuid.partition("-")
+            if dash == '':
+                return None
+            return dmcat
+
+        return the_func
+
+
 class Identifier(NodeGetter):
     """
     Get a name for a node.
@@ -243,6 +276,56 @@ class Identifier(NodeGetter):
             :rtype: str or NoneType
             """
             return maps['identifier'][node]
+
+        return the_func
+
+
+class IdPath(NodeGetter):
+    """
+    Get an ID_PATH value for a node.
+    """
+    # pylint: disable=too-few-public-methods
+
+    map_requires = ['UDEV']
+
+    @staticmethod
+    def getter(maps):
+
+        def the_func(node):
+            """
+            Calculates an ID_PATH.
+
+            :param node: the node
+            :returns: the value to display for ``node``
+            :rtype: str or NoneType
+            """
+            udev_info = maps['UDEV'].get(node)
+            return udev_info and udev_info.get('ID_PATH')
+
+        return the_func
+
+
+class IdSasPath(NodeGetter):
+    """
+    Get an ID_SAS_PATH value for a node.
+    """
+    # pylint: disable=too-few-public-methods
+
+    map_requires = ['UDEV']
+
+    @staticmethod
+    def getter(maps):
+
+        def the_func(node):
+            """
+            Calculates an ID_SAS_PATH.
+
+            :param node: the node
+            :returns: the value to display for ``node``
+            :rtype: str or NoneType
+            """
+            udev_info = maps['UDEV'].get(node)
+            return udev_info and udev_info.get('ID_SAS_PATH')
 
         return the_func
 
@@ -271,9 +354,58 @@ class Size(NodeGetter):
                 return None
             size = sysfs.get('size')
             if size is not None:
-                return str(bytesize.Size(size, bytesize.Size(512)))
+                return str(justbytes.Size(size, justbytes.Size(512)))
             else:
                 return None
+
+        return the_func
+
+
+class Subsystem(NodeGetter):
+    """
+    Get a SUBSYSTEM value for a node.
+    """
+    # pylint: disable=too-few-public-methods
+
+    map_requires = ['UDEV']
+
+    @staticmethod
+    def getter(maps):
+
+        def the_func(node):
+            """
+            Calculates a SUBSYSTEM.
+
+            :param node: the node
+            :returns: the value to display for ``node``
+            :rtype: str or NoneType
+            """
+            udev_info = maps['UDEV'].get(node)
+            return udev_info and udev_info.get('SUBSYSTEM')
+
+        return the_func
+
+
+class Sysname(NodeGetter):
+    """
+    Get a sysname value for a node.
+    """
+    # pylint: disable=too-few-public-methods
+
+    map_requires = ['SYSNAME']
+
+    @staticmethod
+    def getter(maps):
+
+        def the_func(node):
+            """
+            Calculates a SYSNAME.
+
+            :param node: the node
+            :returns: the value to display for ``node``
+            :rtype: str or NoneType
+            """
+            return maps['SYSNAME'].get(node)
 
         return the_func
 
@@ -284,11 +416,16 @@ class NodeGetters(object):
     """
     # pylint: disable=too-few-public-methods
 
-    BY_PATH = ByPath
+    BY_PATH = ByPath # may be deprecated
     DEVNAME = Devname
     DEVPATH = Devpath
     DEVTYPE = Devtype
     DIFFSTATUS = Diffstatus
     DMNAME = Dmname
+    DMUUIDPREFIX = DmUuidPrefix
     IDENTIFIER = Identifier
+    IDPATH = IdPath
+    IDSASPATH = IdSasPath
     SIZE = Size
+    SUBSYSTEM = Subsystem
+    SYSNAME = Sysname

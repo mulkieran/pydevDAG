@@ -32,6 +32,15 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import functools
+
+import pytest
+
+from hypothesis import assume
+from hypothesis import given
+from hypothesis import settings
+from hypothesis import strategies
+
 import pydevDAG
 
 from ._constants import GRAPH
@@ -50,3 +59,119 @@ class TestGraphUtils(object):
         in_degrees = GRAPH.in_degree(roots)
 
         assert all(in_degrees[r] == 0 for r in roots)
+
+    def test_set_direction(self):
+        """
+        Test setting direction results.
+        """
+        graph = pydevDAG.GraphUtils.set_direction(
+           GRAPH,
+           set_reversed=True,
+           copy=True
+        )
+        assert graph.graph['reversed']
+
+        graph = pydevDAG.GraphUtils.set_direction(
+           graph,
+           set_reversed=True,
+           copy=False
+        )
+        assert graph.graph['reversed']
+
+
+class TestDict(object):
+    """
+    Test setting and getting values in a dict.
+    """
+    # pylint: disable=too-few-public-methods
+
+    @given(
+        strategies.lists(elements=strategies.text(), max_size=7, min_size=1),
+        strategies.integers()
+    )
+    @settings(max_examples=20)
+    def test_set_and_get(self, keys, value):
+        """
+        Test basic getting and setting.
+        """
+        table = dict()
+        assert pydevDAG.Dict.get_value(table, keys) is None
+
+        if len(keys) > 1:
+            with pytest.raises(pydevDAG.DAGError):
+                pydevDAG.Dict.set_value(table, keys, value, force=False)
+
+
+        pydevDAG.Dict.set_value(table, keys, value, force=True)
+        assert pydevDAG.Dict.get_value(table, keys) == value
+
+        pydevDAG.Dict.set_value(table, keys, value)
+        assert pydevDAG.Dict.get_value(table, keys[:-1]) == {keys[-1]: value}
+
+    def test_exceptions(self):
+        """
+        Test exceptions.
+        """
+        with pytest.raises(pydevDAG.DAGError):
+            pydevDAG.Dict.set_value(dict(), [], True, force=False)
+        with pytest.raises(pydevDAG.DAGError):
+            pydevDAG.Dict.set_value(None, ['a'], True, force=False)
+        with pytest.raises(pydevDAG.DAGError):
+            pydevDAG.Dict.set_value(None, ['a'], True, force=False)
+        with pytest.raises(pydevDAG.DAGError):
+            pydevDAG.Dict.set_value(
+               {'a': None},
+               ['a', 'b', 'c'],
+               True,
+               force=False
+            )
+
+    @given(
+        strategies.lists(
+            elements=strategies.lists(
+               strategies.text(min_size=1),
+               max_size=7,
+               min_size=1
+            ),
+            max_size=7,
+            min_size=1
+        ),
+        strategies.integers()
+    )
+    @settings(max_examples=20)
+    def test_get_values(self, keys, value):
+        """
+        Test getting and setting.
+
+        First, set all leaves to ``value`` according to keys.
+
+        Check that all values are found.
+        """
+        num_keys = len(keys)
+        for i in range(num_keys):
+            assume(
+               all(keys[i] != keys[j] for j in range(num_keys) if j != i)
+            )
+        keys = sorted(keys, key=len)
+        table = dict()
+        for key in keys:
+            try:
+                pydevDAG.Dict.set_value(table, key, value, force=True)
+            except pydevDAG.DAGError:
+                return
+
+        result = list(pydevDAG.Dict.get_values(table, keys))
+        assert len(result) == len(keys)
+        assert len(set(result)) == 1 and result[0] == value
+
+        unknown_key = functools.reduce(list.__add__, keys, [keys[0]])
+        result = list(pydevDAG.Dict.get_values(table, [unknown_key]))
+        assert all(x is None for x in result)
+        assert len(result) == 1
+
+    def test_get_values_simple(self):
+        """
+        Test what would be exceptions if an empty list did not sometimes
+        mean the same thing.
+        """
+        assert list(pydevDAG.Dict.get_values(None, [])) == []

@@ -18,38 +18,49 @@
 # Red Hat Author(s): Anne Mulhern <amulhern@redhat.com>
 
 """
-    tests.constants
-    ===============
+    pydevDAG._config
+    ================
 
-    Constants for testing.
+    Handling configuration information.
 
-    .. moduleauthor:: mulhern <amulhern@redhat.com>
+    .. moduleauthor::  mulhern <amulhern@redhat.com>
 """
-
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import pyudev
+import json
 
-import pydevDAG
+from ._errors import DAGValueError
 
-CONTEXT = pyudev.Context()
-DEVICES = CONTEXT.list_devices()
 
-# pylint: disable=too-many-function-args
+class _Config(object):
+    """
+    Handle external configuration information.
+    """
+    # pylint: disable=too-few-public-methods
 
-SLAVES = [d for d in DEVICES if list(pydevDAG.slaves(CONTEXT, d, False))]
+    def __init__(self, path):
+        """
+        Initializer.
 
-HOLDERS = [d for d in DEVICES if list(pydevDAG.holders(CONTEXT, d, False))]
+        :param str path: the path of the configuration file
 
-BOTHS = list(set(SLAVES).intersection(set(HOLDERS)))
+        :raises DAGError: on unusable path
+        """
+        try:
+            with open(path) as instream:
+                self.config = json.load(instream)
+        except (ValueError, EnvironmentError) as err:
+            raise DAGValueError(err)
 
-EITHERS = list(set(SLAVES).union(set(HOLDERS)))
+    def get_node_decoration_spec(self):
+        """
+        Get the specification regarding the decoration of nodes.
 
-GRAPH = pydevDAG.GenerateGraph.get_graph(CONTEXT, "graph")
-
-DECORATED = pydevDAG.GenerateGraph.get_graph(CONTEXT, "graph")
-pydevDAG.GenerateGraph.decorate_graph(DECORATED)
+        :returns: the specification for node decoration
+        :rtype: dict or str
+        """
+        return self.config

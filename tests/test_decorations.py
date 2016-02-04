@@ -32,11 +32,12 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import networkx as nx
+import json
+
+import networkx
 
 import pydevDAG
 
-from ._constants import CONTEXT
 from ._constants import GRAPH
 
 
@@ -50,16 +51,16 @@ class TestGraphNodeDecorations(object):
         """
         Test that the value of DEVPATH is the same as the key of the node.
         """
-        props = pydevDAG.UdevProperties.udev_properties(
-           CONTEXT,
-           GRAPH,
-           ['DEVPATH']
+        graph = GRAPH.copy()
+        decorator = pydevDAG.NodeDecorator(
+           json.loads('{"DevicePath" : {"UDEV": ["DEVPATH"]}}')
         )
-        devpaths = props['UDEV']
-        assert all(
-           devpaths[k] == dict() or (devpaths[k]['DEVPATH'] == k) \
-              for k in devpaths
-        )
+        for node in graph.nodes():
+            decorator.decorate(node, graph.node[node])
+        for node in graph.nodes():
+            nodetype = graph.node[node]['nodetype']
+            assert nodetype is not pydevDAG.NodeTypes.DEVICE_PATH or \
+               graph.node[node]['UDEV']['DEVPATH'] == node
 
 
 class TestDifferenceMarkers(object):
@@ -73,14 +74,14 @@ class TestDifferenceMarkers(object):
         """
         markers = pydevDAG.DifferenceMarkers.node_differences(
            GRAPH,
-           nx.DiGraph(),
+           networkx.DiGraph(),
            "present"
         )
         assert not markers['diffstatus']
 
         markers = pydevDAG.DifferenceMarkers.edge_differences(
            GRAPH,
-           nx.DiGraph(),
+           networkx.DiGraph(),
            "present"
         )
         assert not markers['diffstatus']
@@ -123,10 +124,10 @@ class TestNodeDecorating(object):
            "dummy": dict((n, "dummy") for n in new_graph)
         }
         pydevDAG.Decorator.decorate_nodes(new_graph, properties)
-        values = nx.get_node_attributes(new_graph, "dummy").values()
+        values = networkx.get_node_attributes(new_graph, "dummy").values()
         assert values and all(n == "dummy" for n in values)
 
-        others = nx.get_node_attributes(GRAPH, "dummy").values()
+        others = networkx.get_node_attributes(GRAPH, "dummy").values()
         assert not others
 
     def test_decorating_edges(self):
@@ -138,8 +139,8 @@ class TestNodeDecorating(object):
            "dummy": dict((e, "dummy") for e in new_graph.edges())
         }
         pydevDAG.Decorator.decorate_edges(new_graph, properties)
-        values = nx.get_edge_attributes(new_graph, "dummy").values()
+        values = networkx.get_edge_attributes(new_graph, "dummy").values()
         assert values and all(e == "dummy" for e in values)
 
-        others = nx.get_edge_attributes(GRAPH, "dummy").values()
+        others = networkx.get_edge_attributes(GRAPH, "dummy").values()
         assert not others

@@ -18,21 +18,40 @@
 # Red Hat Author(s): Anne Mulhern <amulhern@redhat.com>
 
 """
-    pydevDAG._print
-    ===============
+    pydevDAG._structure._pyudev._types
+    ==================================
 
-    Printing facilities for graphs.
+    Fundamental types for building graphs using pyudev.
 
-    .. moduleauthor::  Anne Mulhern  <amulhern@redhat.com>
+    .. moduleauthor::  mulhern <amulhern@redhat.com>
 """
-from ._graph import GraphLineArrangements
-from ._graph import GraphLineArrangementsConfig
-from ._graph import GraphLineInfo
-from ._graph import GraphXformLines
 
-from ._mapping import MapLineInfos
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
-from ._print import Print
+import abc
 
-from ._helpers import NodeGetter
-from ._helpers import NodeGetters
+from six import add_metaclass
+
+
+@add_metaclass(abc.ABCMeta)
+class PyudevGraph(object):
+    """
+    Superclass of pyudev graph classes.
+    """
+    # pylint: disable=too-few-public-methods
+
+    @classmethod
+    @abc.abstractmethod
+    def complete(cls, context, **kwargs): # pragma: no cover
+        """
+        Build a complete graph showing all devices.
+
+        :param `Context` context: a udev context
+        :param kwargs: arguments for filtering the devices.
+        :returns: a graph
+        :rtype: `DiGraph`
+        """
+        raise NotImplementedError()

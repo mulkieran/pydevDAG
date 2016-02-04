@@ -18,10 +18,10 @@
 # Red Hat Author(s): Anne Mulhern <amulhern@redhat.com>
 
 """
-    pydevDAG._types
-    ===============
+    pydevDAG._attributes._nodetypes
+    ===============================
 
-    Types of graph nodes and edges.
+    Types of graph nodes.
 
     .. moduleauthor::  mulhern <amulhern@redhat.com>
 """
@@ -75,67 +75,3 @@ class NodeTypes(AttributeValues):
     @classmethod
     def values(cls):
         return [cls.DEVICE_PATH, cls.WWN]
-
-
-@six.add_metaclass(abc.ABCMeta)
-class EdgeType(AttributeValue):
-    """
-    Superclass of edge types.
-    """
-    # pylint: disable=too-few-public-methods
-    pass
-
-class Slave(EdgeType):
-    """
-    Encodes slaves/holders relationship.
-    """
-    # pylint: disable=too-few-public-methods
-    pass
-
-Slave = Slave() # pylint: disable=invalid-name
-
-class Partition(EdgeType):
-    """
-    Encodes partition relationship.
-    """
-    # pylint: disable=too-few-public-methods
-    pass
-
-Partition = Partition() # pylint: disable=invalid-name
-
-class Spindle(EdgeType):
-    """
-    Path to spindle relationship.
-    """
-    # pylint: disable=too-few-public-methods
-    pass
-
-Spindle = Spindle() # pylint: disable=invalid-name
-
-class Congruence(EdgeType):
-    """
-    Congruence relationship between dm devices and partitions.
-    """
-    # pylint: disable=too-few-public-methods
-    pass
-
-Congruence = Congruence() # pylint: disable=invalid-name
-
-class EdgeTypes(AttributeValues):
-    """
-    Enumeration of edge types.
-    """
-    # pylint: disable=too-few-public-methods
-    SLAVE = Slave
-    PARTITION = Partition
-    SPINDLE = Spindle
-    CONGRUENCE = Congruence
-
-    @classmethod
-    def values(cls):
-        return [
-           cls.CONGRUENCE,
-           cls.PARTITION,
-           cls.SLAVE,
-           cls.SPINDLE
-        ]

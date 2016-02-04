@@ -18,11 +18,10 @@
 # Red Hat Author(s): Anne Mulhern <amulhern@redhat.com>
 
 """
-    pydevDAG._compare
-    =================
+    pydevDAG._comparison._difference
+    ================================
 
-    Compare graphs to determine if they represent the same storage
-    configuration.
+    Take a difference between two graphs.
 
     .. moduleauthor::  mulhern <amulhern@redhat.com>
 """
@@ -33,117 +32,12 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import networkx as nx
-import networkx.algorithms.isomorphism as iso
 
-from ._attributes import DiffStatuses
+from .._attributes import DiffStatuses
 
-from ._decorations import Decorator
-from ._decorations import DifferenceMarkers
+from .._decorations import Decorator
+from .._decorations import DifferenceMarkers
 
-class Matcher(object):
-    """
-    Class with functions to match graph elements based on selected keys.
-
-    Note that the keys must be at the top-level.
-    """
-
-    def __init__(self, keys, ele_type='node'):
-        """
-        Initializers.
-
-        :param keys: list of keys to match
-        :type keys: list of str
-        :param str ele_type: the type of element, 'node' or 'edge'
-        """
-        self._keys = keys
-        self._ele_type = ele_type
-
-    def get_match(self, graph1, graph2):
-        """
-        Returns a function that checks equality of two graph elements.
-
-        :param keys: a list of keys whose values must be equal
-        :types keys: list of str
-        :param `DiGraph` graph1: a graph
-        :param `DiGraph` graph2: a graph
-
-        :returns: a function that compares two graph elements
-        :rtype: ele * ele -> bool
-        """
-        attr_func = nx.get_node_attributes if self._ele_type == 'node' \
-           else nx.get_edge_attributes
-
-        attr1_dict = dict()
-        attr2_dict = dict()
-        for key in self._keys:
-            attr1_dict[key] = attr_func(graph1, key)
-            attr2_dict[key] = attr_func(graph2, key)
-
-        def the_func(ele1, ele2):
-            """
-            Checks equality of two elements.
-
-            :param ele1: an element
-            :param ele2: an element
-            :returns: True if elements are equal, otherwise False
-            :rtype: bool
-            """
-            node1_dict = dict((k, attr1_dict[k][ele1]) for k in self._keys)
-            node2_dict = dict((k, attr2_dict[k][ele2]) for k in self._keys)
-            return node1_dict == node2_dict
-
-        return the_func
-
-    def get_iso_match(self):
-        """
-        Get match function suitable for use with is_isomorphism method.
-
-        :returns: a function that checks the equality of two graph elements
-        :rtype: ele * ele -> bool
-        """
-        def the_func(attr1, attr2):
-            """
-            Checks equality of two elements.
-
-            :param attr1: attributes of an element
-            :param attr2: attributes of an element
-            :returns: True if elements are equal, otherwise False
-            :rtype: bool
-            """
-            dict_1 = dict((k, attr1[k]) for k in self._keys)
-            dict_2 = dict((k, attr2[k]) for k in self._keys)
-            return dict_1 == dict_2
-
-        return the_func
-
-
-class Compare(object):
-    """
-    Compare two storage graphs.
-    """
-    # pylint: disable=too-few-public-methods
-
-    @classmethod
-    def is_equivalent(cls, graph1, graph2, node_match, edge_match):
-        """
-        Whether these graphs represent equivalent storage configurations.
-
-        :param graph1: a graph
-        :param graph2: a graph
-        :param node_match: a function that checks whether nodes are equal
-        :type node_match: node * node -> bool
-        :param edge_match: a function that checks whether edges are equal
-        :type edge_match: node * node -> bool
-
-        :returns: True if the graphs are equivalent, otherwise False
-        :rtype: bool
-        """
-        return iso.is_isomorphic(
-           graph1,
-           graph2,
-           node_match,
-           edge_match
-        )
 
 class Differences(object):
     """

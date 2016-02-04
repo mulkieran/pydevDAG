@@ -31,19 +31,24 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import itertools
+import os
+
 from collections import defaultdict
 
-import networkx as nx
+import networkx
 
-from ._decorations import DevlinkValues
-from ._decorations import Decorator
-from ._decorations import SysfsAttributes
-from ._decorations import UdevProperties
+from ._attributes import ElementTypes
 
-from . import _compare
+from ._decorations import NodeDecorator
+
+from ._config import _Config
+
+from . import _comparison
 from . import _display
 from . import _print
 from . import _structure
+from . import _utils
 
 
 class GenerateGraph(object):
@@ -61,35 +66,31 @@ class GenerateGraph(object):
         :rtype: `DiGraph`
         """
         graph_classes = [
-           _structure.DMPartitionGraphs,
-           _structure.PartitionGraphs,
-           _structure.SpindleGraphs,
-           _structure.SysfsBlockGraphs
+           _structure.PyudevGraphs.DM_PARTITION_GRAPHS,
+           _structure.PyudevGraphs.ENCLOSURE_GRAPHS,
+           _structure.PyudevGraphs.PARTITION_GRAPHS,
+           _structure.PyudevGraphs.SPINDLE_GRAPHS,
+           _structure.PyudevGraphs.SYSFS_BLOCK_GRAPHS
         ]
-        return _structure.Graph.graph(context, name, graph_classes)
+        return _structure.PyudevAggregateGraph.graph(
+           context,
+           name,
+           graph_classes
+        )
 
     @staticmethod
-    def decorate_graph(context, graph):
+    def decorate_graph(graph):
         """
         Decorate a graph with additional properties.
 
-        :param `Context` context: the libudev context
         :param `DiGraph` graph: the graph
         """
-        table = dict()
+        config = _Config(os.path.realpath('config.json'))
+        spec = config.get_node_decoration_spec()
+        decorator = NodeDecorator(spec)
 
-        properties = ['DEVNAME', 'DEVPATH', 'DEVTYPE']
-        table.update(UdevProperties.udev_properties(context, graph, properties))
-
-        attributes = ['size', 'dm/name']
-        table.update(
-           SysfsAttributes.sysfs_attributes(context, graph, attributes)
-        )
-
-        categories = ['by-path']
-        table.update(DevlinkValues.devlink_values(context, graph, categories))
-
-        Decorator.decorate_nodes(graph, table)
+        for node in graph.nodes():
+            decorator.decorate(node, graph.node[node])
 
 
 class DisplayGraph(object):
@@ -108,7 +109,7 @@ class DisplayGraph(object):
 
         Designate its general layout and mark or rearrange nodes as appropriate.
         """
-        dot_graph = nx.to_agraph(graph)
+        dot_graph = networkx.to_agraph(graph) # pylint: disable=no-member
         dot_graph.graph_attr.update(rankdir="LR")
         dot_graph.layout(prog="dot")
 
@@ -117,6 +118,8 @@ class DisplayGraph(object):
            _display.PartitionTransformer,
            _display.PartitionEdgeTransformer,
            _display.CongruenceEdgeTransformer,
+           _display.EnclosureBayTransformer,
+           _display.EnclosureTransformer,
            _display.AddedNodeTransformer,
            _display.RemovedNodeTransformer,
            _display.AddedEdgeTransformer,
@@ -146,23 +149,40 @@ class PrintGraph(object):
         name_funcs = [
            _print.NodeGetters.DMNAME,
            _print.NodeGetters.DEVNAME,
+           _print.NodeGetters.SYSNAME,
            _print.NodeGetters.IDENTIFIER
         ]
-        line_info = _print.LineInfo(
+        path_funcs = [
+           _print.NodeGetters.IDSASPATH,
+           _print.NodeGetters.IDPATH
+        ]
+        line_info = _print.GraphLineInfo(
            graph,
-           ['NAME', 'DEVTYPE', 'DIFFSTATUS', 'BY-PATH', 'SIZE'],
+           [
+              'NAME',
+              'DEVNAME',
+              'SUBSYSTEM',
+              'DEVTYPE',
+              'DMTYPE',
+              'DIFFSTATUS',
+              'ID_PATH',
+              'SIZE'
+           ],
            justification,
            {
               'NAME' : name_funcs,
+              'DEVNAME' : [_print.NodeGetters.DEVNAME],
               'DEVTYPE': [_print.NodeGetters.DEVTYPE],
+              'DMTYPE': [_print.NodeGetters.DMUUIDPREFIX],
               'DIFFSTATUS': [_print.NodeGetters.DIFFSTATUS],
+              'ID_PATH' : path_funcs,
               'SIZE': [_print.NodeGetters.SIZE],
-              'BY-PATH': [_print.NodeGetters.BY_PATH]
+              'SUBSYSTEM': [_print.NodeGetters.SUBSYSTEM]
            }
         )
 
-        lines = _print.LineArrangements.node_strings_from_graph(
-           _print.LineArrangementsConfig(
+        lines = _print.GraphLineArrangements.node_strings_from_graph(
+           _print.GraphLineArrangementsConfig(
               line_info.info,
               lambda k, v: str(v),
               'NAME'
@@ -170,7 +190,7 @@ class PrintGraph(object):
            graph
         )
 
-        lines = list(_print.XformLines.xform(line_info.keys, lines))
+        lines = list(_print.GraphXformLines.xform(line_info.keys, lines))
         lines = _print.Print.lines( # pylint: disable=redefined-variable-type
            line_info.keys,
            lines,
@@ -196,25 +216,28 @@ class DiffGraph(object):
         :param `DiGraph` graph2: a graph
         :param str diff: the diff to perform
         """
-        node_matcher = _compare.Matcher(['identifier', 'nodetype'], 'node')
+        node_matcher = _comparison.Matcher(
+           ['identifier', 'nodetype'],
+           ElementTypes.NODE
+        )
         match_func = node_matcher.get_match
         edge_matcher = lambda g1, g2: lambda x, y: x == y
         if diff == "full":
-            return _compare.Differences.full_diff(
+            return _comparison.Differences.full_diff(
                graph1,
                graph2,
                match_func,
                edge_matcher
             )
         elif diff == "left":
-            return _compare.Differences.left_diff(
+            return _comparison.Differences.left_diff(
                graph1,
                graph2,
                match_func,
                edge_matcher
             )
         elif diff == "right":
-            return _compare.Differences.right_diff(
+            return _comparison.Differences.right_diff(
                graph1,
                graph2,
                match_func,
@@ -224,69 +247,84 @@ class DiffGraph(object):
             assert False
 
 
-class CompareGraph(object):
+class GraphIsomorphism(object):
     """
-    Compare graphs with boolean result.
+    Get isomorphisms between two graphs.
     """
+    # pylint: disable=too-few-public-methods
 
     @staticmethod
-    def equivalent(graph1, graph2):
+    def isomorphisms_iter(graph1, graph2):
         """
-        Do ``graph1`` and ``graph2`` have the same shape?
+        Isomorphisms between ``graph1`` and ``graph2``.
 
         The type of storage entity that a node represents is considered
-        significant, but not its identity.
+        significant, but not its identity, unless it is a disk with a WWN.
+
+        It should always be the case that WWN nodes map to each other.
 
         :param `DiGraph` graph1: a graph
         :param `DiGraph` graph2: a graph
-        :returns: True if the graphs are equivalent, otherwise False
-        :rtype: bool
+        :returns: generator of graph isomorphisms
+        :rtype: generator of dict of node * node
         """
-        return _compare.Compare.is_equivalent(
+
+        return _comparison.Isomorphisms.isomorphisms_iter(
            graph1,
            graph2,
-           lambda x, y: x['nodetype'] is y['nodetype'],
+           _comparison.NodeComparison([]).equivalent,
            lambda x, y: x['edgetype'] is y['edgetype']
         )
 
     @staticmethod
-    def identical(graph1, graph2):
+    def _minimized_isos(isos, maxnum):
         """
-        Are ``graph1`` and ``graph2`` identical?
+        Returns a generator of minimized isos, no longer than ``maxnum``.
 
-        The identity of every node matters.
-
-        :param `DiGraph` graph1: a graph
-        :param `DiGraph` graph2: a graph
-
-        :returns: True if the graphs are identical, otherwise False
-        :rtype: boolean
+        :param isos: an iterable of isos
+        :param int maxnum: the maximum number to yield
         """
-        node_matcher = _compare.Matcher(['identifier', 'nodetype'], 'node')
-
-        return _compare.Compare.is_equivalent(
-           graph1,
-           graph2,
-           node_matcher.get_iso_match(),
-           lambda x, y: True
+        return itertools.islice(
+           (_utils.GeneralUtils.minimize_mapping(iso) for iso in isos),
+           0,
+           maxnum
         )
 
     @classmethod
-    def compare(cls, graph1, graph2):
+    def print_isomorphism(cls, out, graph1, graph2):
         """
-        Calculate relationship between ``graph1`` and ``graph2``.
+        Print the first isomorphism, if any.
 
-        :param `DiGraph` graph1: a graph
-        :param `DiGraph` graph2: a graph
-
-        :returns: 0 if identical, 1 if equivalent, otherwise 2
-        :rtype: int
+        :param `file` out: print destination
+        :param DiGraph graph1: the first graph
+        :param DiGraph graph2: the second graph
         """
+        isos = cls.isomorphisms_iter(graph1, graph2)
+        minimized = list(cls._minimized_isos(isos, 10))
 
-        if cls.identical(graph1, graph2):
-            return 0
+        if len(minimized) is 0:
+            print('No isomorphism discovered.', end="\n", file=out)
+            return
 
-        if cls.equivalent(graph1, graph2):
-            return 1
+        isomorphism = min(minimized, key=len)
 
-        return 2
+        name_funcs = [
+           _print.NodeGetters.DMNAME,
+           _print.NodeGetters.DEVNAME,
+           _print.NodeGetters.IDENTIFIER
+        ]
+        mapinfo = _print.MapLineInfos(
+           graph1,
+           graph2,
+           name_funcs,
+           ('GRAPH 1', 'GRAPH 2')
+        )
+        lines = mapinfo.info(isomorphism)
+        lines = _print.Print.lines( # pylint: disable=redefined-variable-type
+           mapinfo.keys,
+           lines,
+           2,
+           {'GRAPH 1' : '<', 'GRAPH 2' : '>'}
+        )
+        for line in lines:
+            print(line, end="\n", file=out)

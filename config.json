@@ -1,0 +1,19 @@
+{
+    "DevicePath": {
+        "SYSNAME": null,
+        "UDEV": [
+            "DEVNAME",
+            "DEVPATH",
+            "DEVTYPE",
+            "DM_UUID",
+            "ID_PATH",
+            "ID_SAS_PATH",
+            "SUBSYSTEM"
+        ],
+        "SYSFS": [
+            "size",
+            "dm/name"
+        ]
+    },
+    "WWN": {}
+}

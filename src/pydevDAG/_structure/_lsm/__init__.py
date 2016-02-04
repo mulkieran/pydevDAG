@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2015  Red Hat, Inc.
+# Copyright (C) 2016  Red Hat, Inc.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions of
@@ -18,21 +18,10 @@
 # Red Hat Author(s): Anne Mulhern <amulhern@redhat.com>
 
 """
-    pydevDAG._print
-    ===============
+    pydevDAG._structure._lsm
+    ========================
 
-    Printing facilities for graphs.
+    Facilities for building graphs based on lsm info.
 
     .. moduleauthor::  Anne Mulhern  <amulhern@redhat.com>
 """
-from ._graph import GraphLineArrangements
-from ._graph import GraphLineArrangementsConfig
-from ._graph import GraphLineInfo
-from ._graph import GraphXformLines
-
-from ._mapping import MapLineInfos
-
-from ._print import Print
-
-from ._helpers import NodeGetter
-from ._helpers import NodeGetters

@@ -27,27 +27,34 @@
 """
 from ._attributes import DiffStatuses
 from ._attributes import EdgeTypes
+from ._attributes import ElementTypes
 from ._attributes import NodeTypes
 
-from ._graphs import CompareGraph
+from ._errors import DAGError
+
 from ._graphs import DiffGraph
 from ._graphs import DisplayGraph
 from ._graphs import GenerateGraph
+from ._graphs import GraphIsomorphism
 from ._graphs import PrintGraph
 
 from ._decorations import Decorator
+from ._decorations import NodeDecorator
 from ._decorations import DifferenceMarkers
-from ._decorations import UdevProperties
 
-from ._compare import Compare
-from ._compare import Differences
-from ._compare import Matcher
+from ._comparison import CompareGraph
+from ._comparison import Differences
+from ._comparison import Isomorphisms
+from ._comparison import Matcher
 
-from ._print import LineArrangements
-from ._print import LineArrangementsConfig
-from ._print import LineInfo
+from ._print import GraphLineArrangements
+from ._print import GraphLineArrangementsConfig
+from ._print import GraphLineInfo
+from ._print import GraphXformLines
+
+from ._print import MapLineInfos
+
 from ._print import Print
-from ._print import XformLines
 
 from ._print import NodeGetter
 from ._print import NodeGetters
@@ -56,13 +63,12 @@ from ._readwrite import StringUtils
 from ._readwrite import Reader
 from ._readwrite import Writer
 
-from ._structure import DMPartitionGraphs
-from ._structure import PartitionGraphs
-from ._structure import SpindleGraphs
-from ._structure import SysfsGraphs
+from ._structure import PyudevGraphs
+from ._structure import PyudevAggregateGraph
 from ._structure import SysfsTraversal
 
 from ._traversal import holders
 from ._traversal import slaves
 
 from ._utils import GraphUtils
+from ._utils import Dict

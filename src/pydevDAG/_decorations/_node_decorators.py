@@ -32,156 +32,122 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import abc
 import sys
 
 from itertools import groupby
 
 import six
 
-import networkx as nx
-
 import pyudev
+
+from pyudev._parsing._devlink import Devlink
 
 from pydevDAG._attributes import NodeTypes
 
-from ._devlink import Devlink
+from pydevDAG._errors import DAGValueError
 
-class UdevProperties(object):
+
+@six.add_metaclass(abc.ABCMeta)
+class Domain(object):
     """
-    Find udev properties for the device nodes of a network graph.
+    A particular domain for decoration.
+
+    A domain is just a particular way of going about gathering the information
+    to use to decorate.
+
+    All decoration objects in a particular domain require the same setup and
+    will share the same interface.
     """
-
-    @staticmethod
-    def decorated(graph):
-        """
-        Returns elements that get decorated.
-        """
-        node_types = nx.get_node_attributes(graph, 'nodetype')
-        return (k for k in node_types \
-           if node_types[k] is NodeTypes.DEVICE_PATH)
-
-    @staticmethod
-    def properties(context, element, names):
-        """
-        Get properties on this element.
-
-        :returns: a map of udev properties
-        :rtype: dict
-        """
-        try:
-            device = pyudev.Device.from_path(context, element)
-        except pyudev.DeviceNotFoundError:
-            return dict()
-
-        return dict((k, device[k]) for k in names if k in device)
 
     @classmethod
-    def udev_properties(cls, context, graph, names):
+    def name(cls):
         """
-        Get udev properties for graph nodes that correspond to devices.
-
-        :param `Context` context: the udev context
-        :param graph: the graph
-        :param names: a list of property keys
-        :type names: list of str
-
-        :returns: dict of property name, node, property value
-        :rtype: dict
+        The name of the domain.
         """
-        udev_dict = dict()
-        for node in cls.decorated(graph):
-            udev_dict[node] = cls.properties(context, node, names)
+        return cls.__name__
 
-        return {'UDEV' : udev_dict}
+    @abc.abstractmethod
+    def decorate(self, node, attrdict): # pragma: no cover
+        """
+        Updates attributes on a node.
+
+        :param str node: the node
+        :param dict attrdict: dict of node attributes
+        """
+        raise NotImplementedError()
 
 
-class SysfsAttributes(object):
+class Pyudev(Domain):
     """
-    Find sysfs attributes for the device nodes of a network graph.
+    Construct functions for decorating using pyudev.
     """
+    # pylint: disable=too-few-public-methods
 
-    @staticmethod
-    def decorated(graph):
-        """
-        Returns elements that get decorated.
-        """
-        node_types = nx.get_node_attributes(graph, 'nodetype')
-        return (k for k in node_types \
-           if node_types[k] is NodeTypes.DEVICE_PATH)
 
-    @staticmethod
-    def attributes(context, element, names):
+    def __init__(self, objects):
         """
-        Get attributes on this element.
+        Initializer.
 
-        :returns: a map of sysfs attributes
-        :rtype: dict of str * (str or NoneType)
+        :param objects: a list of object that require a pyudev device
         """
+        objects = list(objects)
+        if any(o.DOMAIN is not self.__class__ for o in objects):
+            raise DAGValueError('objects must be in this domain')
+
+        self.objects = objects
+        self.context = pyudev.Context()
+
+    def decorate(self, node, attrdict):
         try:
-            device = pyudev.Device.from_path(context, element)
+            device = pyudev.Device.from_path(self.context, node)
         except pyudev.DeviceNotFoundError:
-            return dict()
+            return
 
-        attributes = device.attributes
+        for obj in self.objects:
+            obj.decorate(device, attrdict)
 
-        res = dict()
-        for key in names:
-            try:
-                val = attributes.get(key)
-                if val is not None and not isinstance(val, six.text_type):
-                    val = val.decode(sys.getfilesystemencoding())
-                res[key] = val
-            except UnicodeDecodeError:
-                pass
-        return res
 
-    @classmethod
-    def sysfs_attributes(cls, context, graph, names):
+@six.add_metaclass(abc.ABCMeta)
+class PyudevDecorator(object):
+    """
+    Defines interface of objects that use pyudev to do their decorating.
+    """
+    DOMAIN = Pyudev
+
+    def decoratable(self, attrdict):
         """
-        Get sysfs attributes for graph nodes that correspond to devices.
+        Whether ``attrdict`` represents a decoratable node.
 
-        :param `Context` context: the udev context
-        :param graph: the graph
-        :param names: a list of property keys
-        :type names: list of str
-
-        :returns: dict of property name, node, property value
-        :rtype: dict
+        :param dict attrdict: dict of node attributes
+        :returns: True if the node can be decorated by this class, else False
+        :rtype: bool
         """
-        attribute_dict = dict()
-        for node in cls.decorated(graph):
-            attribute_dict[node] = cls.attributes(context, node, names)
+        # pylint: disable=no-self-use
+        return attrdict['nodetype'] is NodeTypes.DEVICE_PATH
 
-        return {'SYSFS' : attribute_dict}
+    @abc.abstractmethod
+    def decorate(self, device, attrdict): # pragma: no cover
+        """
+        Decorate the ``attrdict`` belonging to ``device``.
+
+        :param Device device: libudev device
+        :param dict attrdict: currently stored dict for attributes
+        """
+        raise NotImplementedError()
 
 
-class DevlinkValues(object):
+
+
+class DevlinkValues(PyudevDecorator):
     """
     Add the informational part of device links to the graph.
     """
 
-    @staticmethod
-    def decorated(graph):
-        """
-        Returns elements that get decorated.
-        """
-        node_types = nx.get_node_attributes(graph, 'nodetype')
-        return (k for k in node_types \
-           if node_types[k] is NodeTypes.DEVICE_PATH)
+    def __init__(self, args):
+        self.categories = args
 
-    @staticmethod
-    def values(context, element, categories):
-        """
-        Get device links values on this element.
-
-        :returns: a map of devicelinks values
-        :rtype: dict of str * (list of str * NoneType)
-        """
-        try:
-            device = pyudev.Device.from_path(context, element)
-        except pyudev.DeviceNotFoundError:
-            return dict()
-
+    def decorate(self, device, attrdict):
         def key_func(link):
             """
             :returns: category of link, or "" if no category
@@ -190,28 +156,127 @@ class DevlinkValues(object):
             key = link.category
             return key if key is not None else ""
 
+        result = dict.fromkeys(self.categories)
+
+        # pylint: disable=protected-access
         devlinks = sorted(
            (Devlink(d) for d in device.device_links),
            key=key_func
         )
-        link_hash = dict((k, list(g)) for (k, g) in groupby(devlinks, key_func))
-        return dict((c, link_hash.get(c)) for c in categories)
+        result.update(
+           (k, g) for (k, g) in groupby(devlinks, key_func) if \
+               k in self.categories
+        )
 
-    @classmethod
-    def devlink_values(cls, context, graph, categories):
+        attrdict['DEVLINK'] = result
+
+
+class SysfsAttributes(PyudevDecorator):
+    """
+    Find sysfs attributes for the device nodes of a network graph.
+    """
+
+    def __init__(self, args):
+        self.names = args
+
+    def decorate(self, device, attrdict):
+        attributes = device.attributes
+
+        res = dict()
+        for key in self.names:
+            try:
+                val = attributes.get(key)
+                if val is not None and not isinstance(val, six.text_type):
+                    val = val.decode(sys.getfilesystemencoding())
+                res[key] = val
+            except UnicodeDecodeError:
+                pass
+        attrdict['SYSFS'] = res
+
+
+class Sysname(PyudevDecorator):
+    """
+    Get the sysname for the object.
+    """
+
+    def __init__(self, args):
+        pass
+
+    def decorate(self, device, attrdict):
+        attrdict['SYSNAME'] = device.sys_name
+
+
+class UdevProperties(PyudevDecorator):
+    """
+    Find udev properties for the device nodes of a network graph.
+    """
+
+    def __init__(self, args):
+        self.names = args
+
+    def decorate(self, device, attrdict):
+        attrdict['UDEV'] = \
+           dict((k, device[k]) for k in self.names if k in device)
+
+
+class NodeDecorator(object):
+    """
+    A node decorator for a particular configuration.
+    """
+
+    _FUNCTIONS = {
+       'DEVLINK' : DevlinkValues,
+       'SYSNAME': Sysname,
+       'SYSFS': SysfsAttributes,
+       'UDEV': UdevProperties
+    }
+
+    def __init__(self, config):
         """
-        Get devlink values for graph nodes that correspond to devices.
+        Initializer.
 
-        :param `Context` context: the udev context
-        :param graph: the graph
-        :param categories: a list of devlink categories
-        :type categories: list of str
-
-        :returns: dict of property name, node, property value
-        :rtype: dict of str * str * ((list of str) or NoneType)
+        :param config: configuration for node decorators
+        :type config: dict (JSON)
         """
-        devlink_dict = dict()
-        for node in cls.decorated(graph):
-            devlink_dict[node] = cls.values(context, node, categories)
+        nodeconfigs = (
+           (NodeTypes.get_value(k), v) for (k, v) in config.items()
+        )
+        configs = [(k, v) for (k, v) in nodeconfigs if k is not None]
 
-        return {'DEVLINK' : devlink_dict}
+        self.table = dict((k, self.get_decorator(v)) for (k, v) in configs)
+
+    def get_decorator(self, config):
+        """
+        Get a decorator for one particular nodetype.
+
+        :param config: the configuration for a particular node type
+        :type config: dict (JSON)
+
+        :returns: a sequence of objects for decorating
+        """
+        # Find all available classes for a given key
+        klasses = ((self._FUNCTIONS.get(k), v) for (k, v) in config.items())
+
+        # sort the objects by their domain
+        key_func = lambda x: x.DOMAIN
+        sort_func = lambda x: key_func(x).name()
+        objects = groupby(
+           sorted([k(v) for (k, v) in klasses if k is not None], key=sort_func),
+           key_func
+        )
+
+        # construct a domain object from its component objects
+        return [k(v) for (k, v) in objects]
+
+    def decorate(self, node, attrdict):
+        """
+        Decorates ``attrdict`` with additional attributes.
+
+        :param Context context: a pyudev context
+        :param str node: the node
+        :param dict attrdict: dict of node attributes
+        """
+        objects = self.table.get(attrdict['nodetype'])
+        if objects is not None:
+            for obj in  objects:
+                obj.decorate(node, attrdict)

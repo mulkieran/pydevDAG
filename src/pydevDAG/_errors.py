@@ -18,21 +18,35 @@
 # Red Hat Author(s): Anne Mulhern <amulhern@redhat.com>
 
 """
-    pydevDAG._print
-    ===============
+    pydevDAG._errors
+    ================
 
-    Printing facilities for graphs.
+    Errors raised by this module.
 
-    .. moduleauthor::  Anne Mulhern  <amulhern@redhat.com>
+    .. moduleauthor::  mulhern <amulhern@redhat.com>
 """
-from ._graph import GraphLineArrangements
-from ._graph import GraphLineArrangementsConfig
-from ._graph import GraphLineInfo
-from ._graph import GraphXformLines
 
-from ._mapping import MapLineInfos
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
-from ._print import Print
+import abc
 
-from ._helpers import NodeGetter
-from ._helpers import NodeGetters
+from six import add_metaclass
+
+
+@add_metaclass(abc.ABCMeta)
+class DAGError(Exception):
+    """ Generic error. """
+    pass
+
+class DAGEnvironmentError(DAGError):
+    """ A surprise in the environment in which the DAG is being constructed. """
+    pass
+
+class DAGValueError(DAGError):
+    """
+    Raised if bad value passed.
+    """
+    pass

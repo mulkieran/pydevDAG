@@ -104,7 +104,11 @@ class Utils(object):
         :returns: the result of reading from the nested dicts or None
         :rtype: str or NoneType
         """
+
         res = ele.attr[keys[0]]
+        if res == '':
+            return res
+
         if len(keys) == 1:
             return res
 
@@ -375,6 +379,40 @@ class RemovedEdgeTransformer(GraphTransformer):
     def objects(cls, graph):
         return (e for e in graph.iteredges() if \
            Utils.is_diff_status(e, DiffStatuses.REMOVED))
+
+
+class EnclosureBayTransformer(GraphTransformer):
+    """
+    Label bay edges with their identifiers.
+    """
+
+    @staticmethod
+    def xform_object(graph, obj):
+        obj.attr['label'] = Utils.get_attr(obj, ['identifier'])
+
+    @classmethod
+    def objects(cls, graph):
+        return (
+           e for e in graph.iteredges() \
+              if Utils.get_attr(e, ['edgetype']) == 'EnclosureBay'
+        )
+
+
+class EnclosureTransformer(GraphTransformer):
+    """
+    Change shape of enclosure devices.
+    """
+
+    @staticmethod
+    def xform_object(graph, obj):
+        obj.attr['shape'] = 'rectangle'
+
+    @classmethod
+    def objects(cls, graph):
+        return (
+           e for e in graph.iternodes() \
+              if Utils.get_attr(e, ['SYSFS', 'subsystem']) == 'enclosure'
+        )
 
 
 class GraphTransformers(object):

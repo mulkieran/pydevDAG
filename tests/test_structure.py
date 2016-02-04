@@ -39,8 +39,8 @@ import pydevDAG
 import pytest
 
 from hypothesis import given
+from hypothesis import settings
 from hypothesis import strategies
-from hypothesis import Settings
 
 from ._constants import CONTEXT
 from ._constants import EITHERS
@@ -50,59 +50,43 @@ NUM_TESTS = 5
 # Use conditional to avoid processing tests if number of examples is too small.
 # pytest.mark.skipif allows the test to be built, resulting in a hypothesis
 # error if SLAVES or HOLDERS is empty.
-if len(EITHERS) == 0:
-    @pytest.mark.skipif(
-       True,
-       reason="no slaves or holders data for tests"
-    )
-    class TestSysfsTraversal(object):
-        # pylint: disable=too-few-public-methods
+@pytest.mark.skipif(
+   len(EITHERS) == 0,
+   reason="no slaves or holders data for tests"
+)
+class TestSysfsTraversal(object):
+    """
+    A class for testing graphs generated entirely from sysfs traversals.
+    """
+    @given(strategies.sampled_from(EITHERS))
+    @settings(max_examples=NUM_TESTS, min_satisfying_examples=1)
+    def test_slaves(self, device):
         """
-        An empty test class which is always skipped.
-        """
-        def test_dummy(self):
-            """
-            A dummy test, for which pytest can show a skip message.
-            """
-            pass
-else:
-    class TestSysfsTraversal(object):
-        """
-        A class for testing graphs generated entirely from sysfs traversals.
-        """
-        @given(
-           strategies.sampled_from(EITHERS),
-           settings=Settings(max_examples=NUM_TESTS)
-        )
-        def test_slaves(self, device):
-            """
-            Verify slaves graph has same number of nodes as traversal.
+        Verify slaves graph has same number of nodes as traversal.
 
-            Traversal may contain duplicates, while graph should eliminate
-            duplicates during its construction. Traversal results does not
-            include origin device, graph nodes do.
-            """
-            slaves = list(pydevDAG.slaves(CONTEXT, device))
-            graph = pydevDAG.SysfsTraversal.slaves(CONTEXT, device)
-            graph_len = len(graph)
-            assert len(set(slaves)) == (graph_len - 1 if graph_len else 0)
+        Traversal may contain duplicates, while graph should eliminate
+        duplicates during its construction. Traversal results does not
+        include origin device, graph nodes do.
+        """
+        slaves = list(pydevDAG.slaves(CONTEXT, device))
+        graph = pydevDAG.SysfsTraversal.slaves(CONTEXT, device)
+        graph_len = len(graph)
+        assert len(set(slaves)) == (graph_len - 1 if graph_len else 0)
 
-        @given(
-           strategies.sampled_from(EITHERS),
-           settings=Settings(max_examples=NUM_TESTS)
-        )
-        def test_holders(self, device):
-            """
-            Verify holders graph has same number of nodes as traversal.
+    @given(strategies.sampled_from(EITHERS))
+    @settings(max_examples=NUM_TESTS, min_satisfying_examples=1)
+    def test_holders(self, device):
+        """
+        Verify holders graph has same number of nodes as traversal.
 
-            Traversal may contain duplicates, while graph should eliminate
-            duplicates during its construction. Traversal results does not
-            include origin device, graph nodes do.
-            """
-            holders = list(pydevDAG.holders(CONTEXT, device))
-            graph = pydevDAG.SysfsTraversal.holders(CONTEXT, device)
-            graph_len = len(graph)
-            assert len(set(holders)) == (graph_len - 1 if graph_len else 0)
+        Traversal may contain duplicates, while graph should eliminate
+        duplicates during its construction. Traversal results does not
+        include origin device, graph nodes do.
+        """
+        holders = list(pydevDAG.holders(CONTEXT, device))
+        graph = pydevDAG.SysfsTraversal.holders(CONTEXT, device)
+        graph_len = len(graph)
+        assert len(set(holders)) == (graph_len - 1 if graph_len else 0)
 
 class TestSysfsGraphs(object):
     """
@@ -118,10 +102,10 @@ class TestSysfsGraphs(object):
         Moreover, all nodes have node_type DEVICE_PATH and all edges have
         type SLAVE.
         """
-        graph = pydevDAG.SysfsGraphs.complete(CONTEXT, subsystem="block")
-        devs = list(CONTEXT.list_devices(subsystem="block"))
-        assert nx.number_of_nodes(graph) == len(set(devs))
-        assert set(nx.nodes(graph)) == set(d.device_path for d in devs)
+        graph = pydevDAG.PyudevGraphs.SYSFS_GRAPHS.complete(
+           CONTEXT,
+           subsystem="block"
+        )
 
         types = nx.get_node_attributes(graph, "nodetype")
         assert all(t is pydevDAG.NodeTypes.DEVICE_PATH for t in types.values())
@@ -141,7 +125,7 @@ class TestPartitionGraphs(object):
         The number of nodes in the graph is strictly greater than the number of
         partition devices, as partitions have to belong to some device.
         """
-        graph = pydevDAG.PartitionGraphs.complete(CONTEXT)
+        graph = pydevDAG.PyudevGraphs.PARTITION_GRAPHS.complete(CONTEXT)
         block_devices = CONTEXT.list_devices(subsytem="block")
         partitions = list(block_devices.match_property('DEVTYPE', 'partition'))
         num_partitions = len(partitions)
@@ -161,7 +145,7 @@ class TestSpindleGraphs(object):
         """
         Assert that the graph has no cycles.
         """
-        graph = pydevDAG.SpindleGraphs.complete(CONTEXT)
+        graph = pydevDAG.PyudevGraphs.SPINDLE_GRAPHS.complete(CONTEXT)
         assert nx.is_directed_acyclic_graph(graph)
 
 
@@ -175,5 +159,29 @@ class TestDMPartitionGraphs(object):
         """
         Assert that the graph has no cycles.
         """
-        graph = pydevDAG.DMPartitionGraphs.complete(CONTEXT)
+        graph = pydevDAG.PyudevGraphs.DM_PARTITION_GRAPHS.complete(CONTEXT)
         assert nx.is_directed_acyclic_graph(graph)
+
+
+class TestEnclosureGraphs(object):
+    """
+    Test enclosure graphs.
+    """
+    # pylint: disable=too-few-public-methods
+
+    def test_complete(self):
+        """
+        Assert that graph has no cycles.
+
+        Assert that all edges have type ENCLOSUREBAY.
+        """
+        graph = pydevDAG.PyudevGraphs.ENCLOSURE_GRAPHS.complete(CONTEXT)
+        assert nx.is_directed_acyclic_graph(graph)
+
+        edgetypes = nx.get_edge_attributes(graph, 'edgetype')
+        assert all(
+           v is pydevDAG.EdgeTypes.ENCLOSUREBAY for (k, v) in edgetypes.values()
+        )
+
+        identifiers = nx.get_edge_attributes(graph, 'identifier')
+        assert set(graph.edges()) == set(identifiers.keys())

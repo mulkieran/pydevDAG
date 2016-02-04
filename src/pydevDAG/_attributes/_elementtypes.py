@@ -18,38 +18,61 @@
 # Red Hat Author(s): Anne Mulhern <amulhern@redhat.com>
 
 """
-    tests.constants
-    ===============
+    pydevDAG._attributes._elementtypes
+    ==================================
 
-    Constants for testing.
+    Types of graph elements.
 
-    .. moduleauthor:: mulhern <amulhern@redhat.com>
+    .. moduleauthor::  mulhern <amulhern@redhat.com>
 """
-
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import pyudev
+import abc
 
-import pydevDAG
+import six
 
-CONTEXT = pyudev.Context()
-DEVICES = CONTEXT.list_devices()
+from ._metaclasses import AttributeValue
+from ._metaclasses import AttributeValues
 
-# pylint: disable=too-many-function-args
 
-SLAVES = [d for d in DEVICES if list(pydevDAG.slaves(CONTEXT, d, False))]
+@six.add_metaclass(abc.ABCMeta)
+class ElementType(AttributeValue):
+    """
+    Abstract class that represents a graph element type.
+    """
+    # pylint: disable=too-few-public-methods
+    pass
 
-HOLDERS = [d for d in DEVICES if list(pydevDAG.holders(CONTEXT, d, False))]
+class Node(ElementType):
+    """
+    A graph node.
+    """
+    # pylint: disable=too-few-public-methods
+    pass
 
-BOTHS = list(set(SLAVES).intersection(set(HOLDERS)))
+Node = Node() # pylint: disable=invalid-name
 
-EITHERS = list(set(SLAVES).union(set(HOLDERS)))
+class Edge(ElementType):
+    """
+    A graph edge.
+    """
+    # pylint: disable=too-few-public-methods
+    pass
 
-GRAPH = pydevDAG.GenerateGraph.get_graph(CONTEXT, "graph")
+Edge = Edge() # pylint: disable=invalid-name
 
-DECORATED = pydevDAG.GenerateGraph.get_graph(CONTEXT, "graph")
-pydevDAG.GenerateGraph.decorate_graph(DECORATED)
+class ElementTypes(AttributeValues):
+    """
+    Enumeration of element types.
+    """
+    # pylint: disable=too-few-public-methods
+    EDGE = Edge
+    NODE = Node
+
+    @classmethod
+    def values(cls):
+        return [cls.EDGE, cls.NODE] # pragma: no cover

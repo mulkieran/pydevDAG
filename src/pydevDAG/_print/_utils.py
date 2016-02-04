@@ -18,38 +18,42 @@
 # Red Hat Author(s): Anne Mulhern <amulhern@redhat.com>
 
 """
-    tests.constants
-    ===============
+    pydevDAG._print._utils
+    ======================
 
-    Constants for testing.
+    Utilities for textual display.
 
-    .. moduleauthor:: mulhern <amulhern@redhat.com>
+    .. moduleauthor::  mulhern <amulhern@redhat.com>
 """
-
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import pyudev
+import networkx as nx
 
-import pydevDAG
 
-CONTEXT = pyudev.Context()
-DEVICES = CONTEXT.list_devices()
+class HelpersUtils(object):
+    """
+    Utilities for print helpers.
+    """
+    # pylint: disable=too-few-public-methods
 
-# pylint: disable=too-many-function-args
+    @staticmethod
+    def get_map(getters, graph):
+        """
+        Build a map for graph for requires.
 
-SLAVES = [d for d in DEVICES if list(pydevDAG.slaves(CONTEXT, d, False))]
+        :param getters: an iterable of NodeGetter classes
+        :param graph: a networkx graph to use to obtain the map.
+        :type graph: DiGraph
 
-HOLDERS = [d for d in DEVICES if list(pydevDAG.holders(CONTEXT, d, False))]
+        :returns: a dictionary with requires as keys
+        :rtype: dict of str * (dict of node * object)
 
-BOTHS = list(set(SLAVES).intersection(set(HOLDERS)))
-
-EITHERS = list(set(SLAVES).union(set(HOLDERS)))
-
-GRAPH = pydevDAG.GenerateGraph.get_graph(CONTEXT, "graph")
-
-DECORATED = pydevDAG.GenerateGraph.get_graph(CONTEXT, "graph")
-pydevDAG.GenerateGraph.decorate_graph(DECORATED)
+        The keys of the dictionary are the required fields.
+        Each value is a dictionary from node to value for the field.
+        """
+        requires = set(r for g in getters for r in g.map_requires)
+        return dict((r, nx.get_node_attributes(graph, r)) for r in requires)

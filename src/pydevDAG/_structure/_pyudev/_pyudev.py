@@ -18,21 +18,42 @@
 # Red Hat Author(s): Anne Mulhern <amulhern@redhat.com>
 
 """
-    pydevDAG._print
-    ===============
+    pydevDAG._structure._pyudev
+    ===========================
 
-    Printing facilities for graphs.
+    Tools to build and manipulate graphs of device relationships
+    discovered using pyudev.
 
-    .. moduleauthor::  Anne Mulhern  <amulhern@redhat.com>
+    .. moduleauthor::  mulhern <amulhern@redhat.com>
 """
-from ._graph import GraphLineArrangements
-from ._graph import GraphLineArrangementsConfig
-from ._graph import GraphLineInfo
-from ._graph import GraphXformLines
 
-from ._mapping import MapLineInfos
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
-from ._print import Print
+import networkx as nx
 
-from ._helpers import NodeGetter
-from ._helpers import NodeGetters
+
+class PyudevAggregateGraph(object):
+    """
+    Build a graph according to specifications.
+    """
+    # pylint: disable=too-few-public-methods
+
+    @staticmethod
+    def graph(context, name, classes):
+        """
+        Build a graph using the designated classes.
+
+        :param context: a context
+        :param str name: a name for the graph
+        :param classes: a list of graph classes
+        :type classes: list of type, each type must be subtype of PyudevGraph
+        :returns: a graph
+        :rtype: nx.DiGraph
+        """
+        return nx.compose_all(
+            (t.complete(context) for t in classes),
+            name=name
+        )
