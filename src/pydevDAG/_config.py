@@ -63,4 +63,4 @@ class _Config(object):
         :returns: the specification for node decoration
         :rtype: dict or str
         """
-        return self.config
+        return self.config['nodedecorations']
