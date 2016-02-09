@@ -32,7 +32,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import functools
-import itertools
 
 import networkx as nx
 
@@ -235,14 +234,14 @@ class ExtendedLookup(object):
     """
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, keys):
+    def __init__(self, config):
         """
         Initializer.
 
-        :param keys: the keys
-        :type keys: list of list of str
+        :param config: the config
+        :type config: dict(JSON)
         """
-        self.keys = sorted(keys)
+        self.config = config
 
     def get_values(self, tree):
         """
@@ -252,34 +251,29 @@ class ExtendedLookup(object):
 
         Yields in sequence, the values for each key, None if no value found.
         """
-        return self._get_values(tree, self.keys[:])
+        if self.config == {}:
+            return
+        for val in self._get_values(tree, self.config):
+            yield val
 
-    def _get_values(self, tree, keys):
+    def _get_values(self, tree, config):
         """
         Generate values for keys.
 
         :param dict tree: arbitrarily nested dict
-        :param keys: the keys
-        :type keys: list of list of str
+        :param config: the config
+        :type config: dict (JSON)
         :raises DAGValueError: if any key not found
-
-        Yields in sequence, the values for each key, None if no value found.
-
-        Assumes no duplicate keys.
         """
-
-        if keys == []:
+        if config is None:
+            yield tree
             return
 
-        if keys[0] == []:
-            keys = keys[1:]
-            yield tree
-
-        for (head, group) in itertools.groupby(keys, lambda x: x[0]):
+        for (key, val) in config.items():
             try:
-                subtree = tree.get(head)
-            except (TypeError, AttributeError) as err:
-                raise DAGValueError(err)
+                subtree = tree[key]
+            except (AttributeError, KeyError, TypeError):
+                raise DAGValueError('no key %s in tree' % key)
             else:
-                for val in self._get_values(subtree, [k[1:] for k in group]):
-                    yield val
+                for rval in self._get_values(subtree, val.get('args')):
+                    yield rval

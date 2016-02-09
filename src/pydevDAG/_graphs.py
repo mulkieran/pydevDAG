@@ -95,6 +95,21 @@ class GenerateGraph(object):
         graph.graph['decorations'] = spec
 
 
+class CompareGraph(_comparison.CompareGraph):
+    """
+    Graph comparison.
+    """
+    # pylint: disable=too-few-public-methods
+
+    def __init__(self):
+        """
+        Initializer.
+        """
+        config = _Config(os.path.realpath('config.json'))
+        spec = config.get_persistant_attributes_spec()
+        super(CompareGraph, self).__init__(spec)
+
+
 class DisplayGraph(object):
     """
     Displaying a generated multigraph by transformation to a graphviz graph.

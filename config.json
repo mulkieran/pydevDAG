@@ -21,5 +21,18 @@
             }
         },
         "WWN": {}
+    },
+    "persistantattributes": {
+        "DevicePath": {
+            "UDEV": {
+                "args": {
+                    "DEVTYPE": {},
+                    "SUBSYSTEM": {}
+                }
+            }
+        },
+        "WWN": {
+            "identifier": {}
+        }
     }
 }

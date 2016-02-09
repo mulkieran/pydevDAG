@@ -157,7 +157,7 @@ def _compare(graph, dirpath, filename):
     prev = _get_prev(dirpath, filename)
     if prev is not None:
         pydevDAG.GraphUtils.set_direction(prev, set_reversed=False, copy=False)
-        return pydevDAG.CompareGraph.compare(graph, prev)
+        return pydevDAG.CompareGraph().compare(graph, prev)
     return 2
 
 
