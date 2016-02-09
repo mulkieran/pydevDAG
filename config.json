@@ -1,20 +1,24 @@
 {
     "nodedecorations": {
         "DevicePath": {
-            "SYSNAME": null,
-            "UDEV": [
-                "DEVNAME",
-                "DEVPATH",
-                "DEVTYPE",
-                "DM_UUID",
-                "ID_PATH",
-                "ID_SAS_PATH",
-                "SUBSYSTEM"
-            ],
-            "SYSFS": [
-                "size",
-                "dm/name"
-            ]
+            "SYSNAME" : {},
+            "UDEV": {
+                "args": [
+                    "DEVNAME",
+                    "DEVPATH",
+                    "DEVTYPE",
+                    "DM_UUID",
+                    "ID_PATH",
+                    "ID_SAS_PATH",
+                    "SUBSYSTEM"
+                ]
+            },
+            "SYSFS": {
+                "args": [
+                    "size",
+                    "dm/name"
+                ]
+            }
         },
         "WWN": {}
     }

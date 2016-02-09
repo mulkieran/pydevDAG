@@ -53,7 +53,7 @@ class TestGraphNodeDecorations(object):
         """
         graph = GRAPH.copy()
         decorator = pydevDAG.NodeDecorator(
-           json.loads('{"DevicePath" : {"UDEV": ["DEVPATH"]}}')
+            json.loads('{"DevicePath" : {"UDEV": {"args": ["DEVPATH"]}}}')
         )
         for node in graph.nodes():
             decorator.decorate(node, graph.node[node])
