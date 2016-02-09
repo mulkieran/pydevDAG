@@ -85,7 +85,9 @@ class GenerateGraph(object):
 
         :param `DiGraph` graph: the graph
         """
-        config = _Config(os.path.realpath('config.json'))
+        config = _Config(
+            os.path.join(os.path.dirname(__file__), 'data/config.json')
+        )
         spec = config.get_node_decoration_spec()
         decorator = NodeDecorator(spec)
 
@@ -105,7 +107,9 @@ class CompareGraph(_comparison.CompareGraph):
         """
         Initializer.
         """
-        config = _Config(os.path.realpath('config.json'))
+        config = _Config(
+            os.path.join(os.path.dirname(__file__), 'data/config.json')
+        )
         spec = config.get_persistant_attributes_spec()
         super(CompareGraph, self).__init__(spec)
 
