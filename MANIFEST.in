@@ -5,3 +5,4 @@ include tox.ini
 global-include requirements.txt
 include LICENSE README.rst
 include setup.py
+include src/pydevDAG/data/config.json

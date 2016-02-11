@@ -32,11 +32,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import functools
-
 import pytest
 
-from hypothesis import assume
 from hypothesis import given
 from hypothesis import settings
 from hypothesis import strategies
@@ -126,16 +123,30 @@ class TestDict(object):
                force=False
             )
 
+    def _build_table(self, keys, value=None):
+        """
+        Build a table to search.
+
+        :param keys: a list of keys
+        :type keys: list of text
+        :param value: value to set at leaves
+        :type value: object, None means this is a config dict
+        """
+        if keys == []:
+            return value if value is not None else dict()
+
+        if len(keys) == 1:
+            return {keys[0]: value if value is not None else dict()}
+
+        result = self._build_table(keys[2:], value)
+
+        return {
+           keys[0]: value if value is not None else dict(),
+           keys[1]: ({'args': result} if value is None else result)
+        }
+
     @given(
-        strategies.lists(
-            elements=strategies.lists(
-               strategies.text(min_size=1),
-               max_size=7,
-               min_size=1
-            ),
-            max_size=7,
-            min_size=1
-        ),
+        strategies.lists(strategies.text()),
         strategies.integers()
     )
     @settings(max_examples=20)
@@ -147,31 +158,19 @@ class TestDict(object):
 
         Check that all values are found.
         """
-        num_keys = len(keys)
-        for i in range(num_keys):
-            assume(
-               all(keys[i] != keys[j] for j in range(num_keys) if j != i)
-            )
-        keys = sorted(keys, key=len)
-        table = dict()
-        for key in keys:
-            try:
-                pydevDAG.Dict.set_value(table, key, value, force=True)
-            except pydevDAG.DAGError:
-                return
+        keys = list(set(keys))
+        table = self._build_table(keys)
+        tree = self._build_table(keys, value)
+        result = list(pydevDAG.ExtendedLookup(table).get_values(tree))
+        assert table == {} or (len(set(result)) == 1 and result[0] == value)
 
-        result = list(pydevDAG.Dict.get_values(table, keys))
-        assert len(result) == len(keys)
-        assert len(set(result)) == 1 and result[0] == value
-
-        unknown_key = functools.reduce(list.__add__, keys, [keys[0]])
-        result = list(pydevDAG.Dict.get_values(table, [unknown_key]))
-        assert all(x is None for x in result)
-        assert len(result) == 1
+        unknown_key = '_' + ''.join(keys)
+        with pytest.raises(pydevDAG.DAGError):
+            list(pydevDAG.ExtendedLookup({unknown_key: {}}).get_values(tree))
 
     def test_get_values_simple(self):
         """
         Test what would be exceptions if an empty list did not sometimes
         mean the same thing.
         """
-        assert list(pydevDAG.Dict.get_values(None, [])) == []
+        assert list(pydevDAG.ExtendedLookup({}).get_values(None)) == []

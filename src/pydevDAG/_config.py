@@ -63,4 +63,14 @@ class _Config(object):
         :returns: the specification for node decoration
         :rtype: dict or str
         """
-        return self.config
+        return self.config['nodedecorations']
+
+    def get_persistant_attributes_spec(self):
+        """
+        Get specifications about what attributes are to be regarded as
+        persistant.
+
+        :returns: the specification for persistant attributes
+        :rtype: dict or str
+        """
+        return self.config['persistantattributes']

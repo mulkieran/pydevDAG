@@ -33,9 +33,7 @@ from __future__ import unicode_literals
 
 import networkx.algorithms.isomorphism as iso
 
-from .._attributes import NodeTypes
-
-from .._utils import Dict
+from .._utils import ExtendedLookup
 
 
 class Isomorphisms(object):
@@ -99,21 +97,15 @@ class NodeComparison(object):
     """
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, keys):
+    def __init__(self, config):
         """
         Initializer.
 
-        :param keys: keys that are deemed persistant
-        :type keys: hash of list of list of str
-
-        Keys map nodetype values to lists of key sequences.
-
-        Nodetype value of None as key means for all keys.
-
-        Assumes that the keys for each nodetype are sorted as list.sort()
-        would sort them.
+        :param config: config
+        :type config: dict (JSON)
         """
-        self.keys = keys
+        self.config = config
+        self.lookups = dict()
 
     def equivalent(self, hash1, hash2):
         """
@@ -124,25 +116,13 @@ class NodeComparison(object):
         if nodetype is not hash2['nodetype']:
             return False
 
-        keys = self.keys.get(None, [])
+        getter = self.lookups.get(nodetype)
+        if getter is None:
+            keys = self.config.get(None, dict())
+            keys.update(self.config.get(nodetype, dict()))
+            getter = self.lookups[nodetype] = ExtendedLookup(keys)
 
-        special_keys = self.keys.get(nodetype)
-        if special_keys is not None:
-            keys.extend(special_keys)
-
-        return Dict.get_values(hash1, keys) == Dict.get_values(hash2, keys)
-
-
-class Constants(object):
-    """
-    Any constants.
-    """
-    # pylint: disable=too-few-public-methods
-
-    PERSISTANT_ATTRIBUTES = {
-       NodeTypes.WWN : sorted([['SYSFS', 'subsystem'], ['UDEV', 'DEVTYPE']]),
-       NodeTypes.DEVICE_PATH : sorted([['identifier']])
-    }
+        return list(getter.get_values(hash1)) == list(getter.get_values(hash2))
 
 
 class CompareGraph(object):
@@ -150,8 +130,17 @@ class CompareGraph(object):
     Compare graphs with boolean result.
     """
 
-    @staticmethod
-    def equivalent(graph1, graph2):
+    def __init__(self, config):
+        """
+        Initializer.
+
+        :param config: configuration
+        :type config: dict (JSON)
+        """
+        self.equivalent_node = NodeComparison(config)
+        self.identical_node = NodeComparison({None: {"identifier": {}}})
+
+    def equivalent(self, graph1, graph2):
         """
         Do ``graph1`` and ``graph2`` have the same shape?
 
@@ -167,12 +156,11 @@ class CompareGraph(object):
         return Isomorphisms.is_equivalent(
            graph1,
            graph2,
-           NodeComparison(Constants.PERSISTANT_ATTRIBUTES).equivalent,
+           self.equivalent_node.equivalent,
            lambda x, y: x['edgetype'] is y['edgetype']
         )
 
-    @staticmethod
-    def identical(graph1, graph2):
+    def identical(self, graph1, graph2):
         """
         Are ``graph1`` and ``graph2`` identical?
 
@@ -188,12 +176,11 @@ class CompareGraph(object):
         return Isomorphisms.is_equivalent(
            graph1,
            graph2,
-           NodeComparison({None: [['identifier']]}).equivalent,
+           self.identical_node.equivalent,
            lambda x, y: x['edgetype'] is y['edgetype']
         )
 
-    @classmethod
-    def compare(cls, graph1, graph2):
+    def compare(self, graph1, graph2):
         """
         Calculate relationship between ``graph1`` and ``graph2``.
 
@@ -204,10 +191,10 @@ class CompareGraph(object):
         :rtype: int
         """
 
-        if cls.identical(graph1, graph2):
+        if self.identical(graph1, graph2):
             return 0
 
-        if cls.equivalent(graph1, graph2):
+        if self.equivalent(graph1, graph2):
             return 1
 
         return 2

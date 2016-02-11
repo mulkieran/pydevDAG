@@ -105,7 +105,8 @@ class Pyudev(Domain):
             return
 
         for obj in self.objects:
-            obj.decorate(device, attrdict)
+            if obj.decoratable(attrdict):
+                obj.decorate(device, attrdict)
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -255,13 +256,16 @@ class NodeDecorator(object):
         :returns: a sequence of objects for decorating
         """
         # Find all available classes for a given key
-        klasses = ((self._FUNCTIONS.get(k), v) for (k, v) in config.items())
+        klasses = [(self._FUNCTIONS.get(k), v) for (k, v) in config.items()]
 
         # sort the objects by their domain
         key_func = lambda x: x.DOMAIN
         sort_func = lambda x: key_func(x).name()
         objects = groupby(
-           sorted([k(v) for (k, v) in klasses if k is not None], key=sort_func),
+           sorted(
+               [k(v.get('args')) for (k, v) in klasses if k is not None],
+               key=sort_func
+           ),
            key_func
         )
 

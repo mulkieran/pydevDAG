@@ -32,7 +32,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import functools
-import itertools
 
 import networkx as nx
 
@@ -190,39 +189,6 @@ class Dict(object):
                 return None
         return result
 
-
-    @classmethod
-    def get_values(cls, tree, keys):
-        """
-        Generate values for keys.
-
-        :param dict tree: arbitrarily nested dict
-        :param keys: the keys
-        :type keys: list of list of str
-
-        Yields in sequence, the values for each key, None if no value found.
-
-        Assumes that lists in keys are unique and sorted.
-        """
-        if keys == []:
-            return
-
-        if keys[0] == []:
-            keys = keys[1:]
-            yield tree
-
-        for (head, group) in itertools.groupby(keys, lambda x: x[0]):
-            try:
-                result = cls.get_values(
-                    tree.get(head),
-                    [k[1:] for k in group]
-                )
-                for val in result:
-                    yield val
-            except (TypeError, AttributeError):
-                for _ in group:
-                    yield None
-
     @staticmethod
     def set_value(tree, keys, value, force=False):
         """
@@ -260,3 +226,54 @@ class Dict(object):
             lvalue[last] = value
         except TypeError:
             raise DAGValueError()
+
+
+class ExtendedLookup(object):
+    """
+    Get the result of looking at multiple attributes of a node at once.
+    """
+    # pylint: disable=too-few-public-methods
+
+    def __init__(self, config):
+        """
+        Initializer.
+
+        :param config: the config
+        :type config: dict(JSON)
+        """
+        self.config = config
+
+    def get_values(self, tree):
+        """
+        Generate values for keys.
+
+        :param dict tree: arbitrarily nested dict
+
+        Yields in sequence, the values for each key, None if no value found.
+        """
+        if self.config == {}:
+            return
+        for val in self._get_values(tree, self.config):
+            yield val
+
+    def _get_values(self, tree, config):
+        """
+        Generate values for keys.
+
+        :param dict tree: arbitrarily nested dict
+        :param config: the config
+        :type config: dict (JSON)
+        :raises DAGValueError: if any key not found
+        """
+        if config is None:
+            yield tree
+            return
+
+        for (key, val) in config.items():
+            try:
+                subtree = tree[key]
+            except (AttributeError, KeyError, TypeError):
+                raise DAGValueError('no key %s in tree' % key)
+            else:
+                for rval in self._get_values(subtree, val.get('args')):
+                    yield rval

@@ -1,0 +1,38 @@
+{
+    "nodedecorations": {
+        "DevicePath": {
+            "SYSNAME" : {},
+            "UDEV": {
+                "args": [
+                    "DEVNAME",
+                    "DEVPATH",
+                    "DEVTYPE",
+                    "DM_UUID",
+                    "ID_PATH",
+                    "ID_SAS_PATH",
+                    "SUBSYSTEM"
+                ]
+            },
+            "SYSFS": {
+                "args": [
+                    "size",
+                    "dm/name"
+                ]
+            }
+        },
+        "WWN": {}
+    },
+    "persistantattributes": {
+        "DevicePath": {
+            "UDEV": {
+                "args": {
+                    "DEVTYPE": {},
+                    "SUBSYSTEM": {}
+                }
+            }
+        },
+        "WWN": {
+            "identifier": {}
+        }
+    }
+}

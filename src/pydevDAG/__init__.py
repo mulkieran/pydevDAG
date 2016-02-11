@@ -32,6 +32,7 @@ from ._attributes import NodeTypes
 
 from ._errors import DAGError
 
+from ._graphs import CompareGraph
 from ._graphs import DiffGraph
 from ._graphs import DisplayGraph
 from ._graphs import GenerateGraph
@@ -42,7 +43,6 @@ from ._decorations import Decorator
 from ._decorations import NodeDecorator
 from ._decorations import DifferenceMarkers
 
-from ._comparison import CompareGraph
 from ._comparison import Differences
 from ._comparison import Isomorphisms
 from ._comparison import Matcher
@@ -72,3 +72,4 @@ from ._traversal import slaves
 
 from ._utils import GraphUtils
 from ._utils import Dict
+from ._utils import ExtendedLookup
