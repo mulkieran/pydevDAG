@@ -1,4 +1,13 @@
 {
+    "nodeattributes": [
+        "nodetype",
+        "identifier"
+    ],
+    "edgeattributes": {
+        "EnclosureBay": {
+            "args": ["identifier"]
+        }
+    },
     "nodedecorations": {
         "DevicePath": {
             "SYSNAME" : {},
