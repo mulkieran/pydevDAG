@@ -37,7 +37,7 @@ from six import add_metaclass
 
 import networkx as nx
 
-from pyudev._parsing._devlink import Devlink
+from parseudev import Devlink
 
 from pydevDAG._attributes import DiffStatuses
 from pydevDAG._attributes import EdgeTypes

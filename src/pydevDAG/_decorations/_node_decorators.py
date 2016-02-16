@@ -41,7 +41,7 @@ import six
 
 import pyudev
 
-from pyudev._parsing._devlink import Devlink
+from parseudev import Devlink
 
 from pydevDAG._attributes import NodeTypes
 
