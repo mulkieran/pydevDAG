@@ -59,6 +59,7 @@ setuptools.setup(
         'justbytes>0.2',
         'networkx',
         'pygraphviz>=1.3.1',
+        'parseudev',
         'pyudev>=0.19',
         'six'
     ],
