@@ -1,0 +1,127 @@
+#!/usr/bin/python
+#
+# -*- coding: utf-8 -*-
+# Copyright (C) 2015  Red Hat, Inc.
+#
+# This copyrighted material is made available to anyone wishing to use,
+# modify, copy, or redistribute it subject to the terms and conditions of
+# the GNU General Public License v.2, or (at your option) any later version.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY expressed or implied, including the implied warranties of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+# Public License for more details.  You should have received a copy of the
+# GNU General Public License along with this program; if not, write to the
+# Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.  Any Red Hat trademarks that are incorporated in the
+# source code or documentation are not subject to the GNU General Public
+# License and may only be used or replicated with the express permission of
+# Red Hat, Inc.
+#
+# Red Hat Author(s): Anne Mulhern <amulhern@redhat.com>
+
+"""
+    reportdev
+    =========
+
+    Python script for interpreting graphs of devices.
+
+    .. moduleauthor::  Anne Mulhern  <amulhern@redhat.com>
+"""
+
+from __future__ import print_function
+
+import argparse
+import os
+import sys
+
+import pystache
+
+import pydevDAG
+
+from pydevDAG._queries import _enclosures
+
+_ACTIONS = ['enclosures']
+
+def get_parser():
+    """
+    Generate an appropriate parser.
+
+    :returns: an argument parser
+    :rtype: `ArgumentParser`
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+       "filename",
+       help="path of file containing graph"
+    )
+    parser.add_argument(
+       "--action",
+       choices=_ACTIONS,
+       default="enclosures",
+       help="action to perform"
+    )
+    parser.add_argument(
+       "--outpath",
+       help="path to put resulting output, if none, sys.stdout"
+    )
+    return parser
+
+def check_namespace(namespace):
+    """
+    Verify that the result of the parse makes sense and is doable.
+
+    :param `Namespace`` namespace: the resulting namespace
+    :returns: error if there is one, else None
+    :rtype: str or NoneType
+    """
+    return None
+
+def do_action(graph, action, out):
+    """
+    Do the action.
+
+    :param `DiGraph` graph: the graph
+    :param str action: the action to perform
+    :param file out: output stream for results
+    """
+    assert action in _ACTIONS
+
+    if action == "enclosures":
+        enclosures = _enclosures.ByEnclosures.get(graph)
+        with open(os.path.join(os.path.dirname(__file__), 'pydevDAG/data/html/enclosures.mustache'), 'r') as instream:
+            template = instream.read()
+        parsed = pystache.parse(template.decode())
+        html = pystache.Renderer().render(parsed, enclosures)
+        print(html, file=out, end='')
+    else:
+        assert False
+
+def main():
+    """
+    The main method for querying device graphs.
+    """
+    args = get_parser().parse_args()
+
+    parsing_error = check_namespace(args)
+    if parsing_error:
+        sys.exit(parsing_error)
+
+    with open(args.filename) as infile:
+        graph = pydevDAG.Reader.read(infile)
+
+    graph = pydevDAG.GraphUtils.set_direction(
+       graph,
+       set_reversed=False,
+       copy=False
+    )
+
+    if not args.outpath:
+        do_action(graph, args.action, sys.stdout)
+    else:
+        with open(args.outpath, "w") as out:
+            do_action(graph, args.action, out)
+
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
