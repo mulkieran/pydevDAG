@@ -180,13 +180,15 @@ class Dict(object):
         :type keys: list of str
         :returns: the result of traversing ``tree`` by means of ``keys``
         :rtype: object
+
+        :raises DAGValueError: if the value can not be found
         """
         result = tree
         for key in keys:
-            if key in result:
+            try:
                 result = result[key]
-            else:
-                return None
+            except KeyError:
+                raise DAGValueError("value for sequence %s not found" % keys)
         return result
 
     @staticmethod
