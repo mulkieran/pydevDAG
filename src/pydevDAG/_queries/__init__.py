@@ -25,3 +25,5 @@
 
     .. moduleauthor::  Anne Mulhern  <amulhern@redhat.com>
 """
+
+from ._process import ProcessQuery

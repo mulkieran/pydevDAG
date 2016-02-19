@@ -31,14 +31,12 @@
 from __future__ import print_function
 
 import argparse
-import os
 import sys
-
-import pystache
 
 import pydevDAG
 
-from pydevDAG._queries import _enclosures
+from pydevDAG import _queries
+
 
 _ACTIONS = ['enclosures']
 
@@ -74,6 +72,7 @@ def check_namespace(namespace):
     :returns: error if there is one, else None
     :rtype: str or NoneType
     """
+    # pylint: disable=unused-argument
     return None
 
 def do_action(graph, action, out):
@@ -87,11 +86,7 @@ def do_action(graph, action, out):
     assert action in _ACTIONS
 
     if action == "enclosures":
-        enclosures = _enclosures.ByEnclosures.get(graph)
-        with open(os.path.join(os.path.dirname(__file__), 'pydevDAG/data/html/enclosures.mustache'), 'r') as instream:
-            template = instream.read()
-        parsed = pystache.parse(template.decode())
-        html = pystache.Renderer().render(parsed, enclosures)
+        html = _queries.ProcessQuery.process(graph, 'BY_ENCLOSURES')
         print(html, file=out, end='')
     else:
         assert False
