@@ -187,7 +187,7 @@ class Dict(object):
         for key in keys:
             try:
                 result = result[key]
-            except KeyError:
+            except (KeyError, TypeError):
                 raise DAGValueError("value for sequence %s not found" % keys)
         return result
 
