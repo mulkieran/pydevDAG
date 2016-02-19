@@ -35,8 +35,6 @@ from pydevDAG._attributes import DiffStatuses
 from pydevDAG._utils import GeneralUtils
 from pydevDAG._utils import GraphUtils
 
-from ._utils import HelpersUtils
-
 
 class GraphLineArrangementsConfig(object):
     """
@@ -289,15 +287,11 @@ class GraphLineInfo(object):
         """
         self.keys = keys
         self.alignment = alignment
-
-        # all getters required for all columns
-        getter_classes = set(g for name in getters for g in getters[name])
-
-        maps = HelpersUtils.get_map(getter_classes, graph)
+        self.graph = graph
 
         # functions, indexed by column name
         self._funcs = dict(
-           (k, GeneralUtils.composer([g.getter(maps) for g in getters[k]])) \
+           (k, GeneralUtils.composer([g.getter for g in getters[k]])) \
               for k in keys
         )
 
@@ -324,5 +318,8 @@ class GraphLineInfo(object):
             keys = self.keys
 
         return dict(
-           (k, conv(k, self._funcs.get(k, lambda n: None)(node))) for k in keys
+           (
+              k,
+              conv(k, self._funcs.get(k, lambda n: None)(self.graph.node[node]))
+           ) for k in keys
         )

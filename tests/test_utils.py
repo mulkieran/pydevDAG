@@ -92,7 +92,8 @@ class TestDict(object):
         Test basic getting and setting.
         """
         table = dict()
-        assert pydevDAG.Dict.get_value(table, keys) is None
+        with pytest.raises(pydevDAG.DAGError):
+            pydevDAG.Dict.get_value(table, keys)
 
         if len(keys) > 1:
             with pytest.raises(pydevDAG.DAGError):

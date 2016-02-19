@@ -33,8 +33,6 @@ from __future__ import unicode_literals
 
 from pydevDAG._utils import GeneralUtils
 
-from ._utils import HelpersUtils
-
 
 class MapLineInfos(object):
     """
@@ -56,11 +54,7 @@ class MapLineInfos(object):
         self._graph1 = graph1
         self._graph2 = graph2
 
-        map1 = HelpersUtils.get_map(getters, graph1)
-        map2 = HelpersUtils.get_map(getters, graph2)
-
-        self._func1 = GeneralUtils.composer([g.getter(map1) for g in getters])
-        self._func2 = GeneralUtils.composer([g.getter(map2) for g in getters])
+        self._func = GeneralUtils.composer([g.getter for g in getters])
 
         self.keys = keys
 
@@ -74,7 +68,9 @@ class MapLineInfos(object):
         """
         lkey, rkey = self.keys
         lines = (
-           {lkey : self._func1(left), rkey : self._func2(right)} \
-              for (left, right) in mapping.items()
+           {
+              lkey : self._func(self._graph1.node[left]),
+              rkey : self._func(self._graph2.node[right])
+           } for (left, right) in mapping.items()
         )
         return sorted(list(lines), key=lambda x: x[lkey])
