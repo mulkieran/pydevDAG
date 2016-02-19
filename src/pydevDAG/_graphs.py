@@ -46,6 +46,7 @@ from ._config import _Config
 
 from . import _comparison
 from . import _display
+from . import _item_str
 from . import _print
 from . import _structure
 from . import _utils
@@ -168,14 +169,14 @@ class PrintGraph(object):
         justification = defaultdict(lambda: '<')
         justification['SIZE'] = '>'
         name_funcs = [
-           _print.NodeGetters.DMNAME,
-           _print.NodeGetters.DEVNAME,
-           _print.NodeGetters.SYSNAME,
-           _print.NodeGetters.IDENTIFIER
+           _item_str.NodeGetters.DMNAME,
+           _item_str.NodeGetters.DEVNAME,
+           _item_str.NodeGetters.SYSNAME,
+           _item_str.NodeGetters.IDENTIFIER
         ]
         path_funcs = [
-           _print.NodeGetters.IDSASPATH,
-           _print.NodeGetters.IDPATH
+           _item_str.NodeGetters.IDSASPATH,
+           _item_str.NodeGetters.IDPATH
         ]
         line_info = _print.GraphLineInfo(
            graph,
@@ -192,13 +193,13 @@ class PrintGraph(object):
            justification,
            {
               'NAME' : name_funcs,
-              'DEVNAME' : [_print.NodeGetters.DEVNAME],
-              'DEVTYPE': [_print.NodeGetters.DEVTYPE],
-              'DMTYPE': [_print.NodeGetters.DMUUIDPREFIX],
-              'DIFFSTATUS': [_print.NodeGetters.DIFFSTATUS],
+              'DEVNAME' : [_item_str.NodeGetters.DEVNAME],
+              'DEVTYPE': [_item_str.NodeGetters.DEVTYPE],
+              'DMTYPE': [_item_str.NodeGetters.DMUUIDPREFIX],
+              'DIFFSTATUS': [_item_str.NodeGetters.DIFFSTATUS],
               'ID_PATH' : path_funcs,
-              'SIZE': [_print.NodeGetters.SIZE],
-              'SUBSYSTEM': [_print.NodeGetters.SUBSYSTEM]
+              'SIZE': [_item_str.NodeGetters.SIZE],
+              'SUBSYSTEM': [_item_str.NodeGetters.SUBSYSTEM]
            }
         )
 
@@ -330,9 +331,9 @@ class GraphIsomorphism(object):
         isomorphism = min(minimized, key=len)
 
         name_funcs = [
-           _print.NodeGetters.DMNAME,
-           _print.NodeGetters.DEVNAME,
-           _print.NodeGetters.IDENTIFIER
+           _item_str.NodeGetters.DMNAME,
+           _item_str.NodeGetters.DEVNAME,
+           _item_str.NodeGetters.IDENTIFIER
         ]
         mapinfo = _print.MapLineInfos(
            graph1,

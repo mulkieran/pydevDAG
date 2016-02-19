@@ -33,6 +33,3 @@ from ._graph import GraphXformLines
 from ._mapping import MapLineInfos
 
 from ._print import Print
-
-from ._helpers import NodeGetter
-from ._helpers import NodeGetters
