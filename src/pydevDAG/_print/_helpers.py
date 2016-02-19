@@ -35,9 +35,14 @@ import abc
 
 import six
 
+from parseudev import DMUUIDParse
+
 import justbytes
 
 from pydevDAG._attributes import DiffStatuses
+from pydevDAG._errors import DAGValueError
+from pydevDAG._utils import Dict
+
 
 @six.add_metaclass(abc.ABCMeta)
 class NodeGetter(object):
@@ -46,22 +51,18 @@ class NodeGetter(object):
     """
     # pylint: disable=too-few-public-methods
 
-    map_requires = abc.abstractproperty(
-       doc="maps to get using get_node_attributes"
-    )
-
     @staticmethod
     @abc.abstractmethod
-    def getter(maps):
+    def getter(node):
         """
         Get a function that obtains a string from a node.
 
-        :param maps: a dict of maps from nodes to attribute values
-        :type maps: dict of str * (dict of node * object)
-        :returns: a function that takes a node and returns a string
-        :rtype: node -> (str or NoneType)
+        :param dict node: the attributes of the node
+        :returns: a string to print for this node
+        :rtype: str
         """
         raise NotImplementedError()
+
 
 class ByPath(NodeGetter):
     """
@@ -69,30 +70,17 @@ class ByPath(NodeGetter):
     """
     # pylint: disable=too-few-public-methods
 
-    map_requires = ['DEVLINK']
-
     @staticmethod
-    def getter(maps):
-
-        def the_func(node):
-            """
-            Calculates a by-path value.
-
-            :param node: the node
-            :returns: the value to display for ``node``
-            :rtype: str or NoneType
-            """
-            info = maps['DEVLINK'].get(node)
-            if info is None:
-                return None
-
-            links = info.get('by-path')
+    def getter(node):
+        try:
+            links = Dict.get_value(node, ['DEVLINK', 'by-path'])
             if links is None:
                 return None
+            else:
+                return "; ".join(str(link.value) for link in links)
+        except DAGValueError:
+            return None
 
-            return "; ".join(str(link.value) for link in links)
-
-        return the_func
 
 class Devname(NodeGetter):
     """
@@ -100,23 +88,13 @@ class Devname(NodeGetter):
     """
     # pylint: disable=too-few-public-methods
 
-    map_requires = ['UDEV']
-
     @staticmethod
-    def getter(maps):
+    def getter(node):
+        try:
+            return Dict.get_value(node, ['UDEV', 'DEVNAME'])
+        except DAGValueError:
+            return None
 
-        def the_func(node):
-            """
-            Calculates a DEVNAME or identifier.
-
-            :param node: the node
-            :returns: the value to display for ``node``
-            :rtype: str or NoneType
-            """
-            udev_info = maps['UDEV'].get(node)
-            return udev_info and udev_info.get('DEVNAME')
-
-        return the_func
 
 class Devpath(NodeGetter):
     """
@@ -124,23 +102,13 @@ class Devpath(NodeGetter):
     """
     # pylint: disable=too-few-public-methods
 
-    map_requires = ['UDEV']
-
     @staticmethod
-    def getter(maps):
+    def getter(node):
+        try:
+            return Dict.get_value(node, ['UDEV', 'DEVPATH'])
+        except DAGValueError:
+            return None
 
-        def the_func(node):
-            """
-            Calculates a DEVPATH or identifier.
-
-            :param node: the node
-            :returns: the value to display for ``node``
-            :rtype: str or NoneType
-            """
-            udev_info = maps['UDEV'].get(node)
-            return udev_info and udev_info.get('DEVPATH')
-
-        return the_func
 
 class Devtype(NodeGetter):
     """
@@ -148,23 +116,12 @@ class Devtype(NodeGetter):
     """
     # pylint: disable=too-few-public-methods
 
-    map_requires = ['UDEV']
-
     @staticmethod
-    def getter(maps):
-
-        def the_func(node):
-            """
-            Calculates a DEVTYPE.
-
-            :param node: the node
-            :returns: the value to display for ``node``
-            :rtype: str or NoneType
-            """
-            udev_info = maps['UDEV'].get(node)
-            return udev_info and udev_info.get('DEVTYPE')
-
-        return the_func
+    def getter(node):
+        try:
+            return Dict.get_value(node, ['UDEV', 'DEVTYPE'])
+        except DAGValueError:
+            return None
 
 
 class Diffstatus(NodeGetter):
@@ -173,27 +130,17 @@ class Diffstatus(NodeGetter):
     """
     # pylint: disable=too-few-public-methods
 
-    map_requires = ['diffstatus']
-
     @staticmethod
-    def getter(maps):
-
-        def the_func(node):
-            """
-            Calculates the diffstatus.
-
-            :param node: the node
-            :returns: the value to display for ``node``
-            :rtype: str or NoneType
-            """
-            diffstatus = maps['diffstatus'].get(node)
+    def getter(node):
+        try:
+            diffstatus = Dict.get_value(node, ['diffstatus'])
             if diffstatus is DiffStatuses.ADDED:
                 return 'ADDED'
             if diffstatus is DiffStatuses.REMOVED:
                 return 'REMOVED'
             return None
-
-        return the_func
+        except DAGValueError:
+            return None
 
 
 class Dmname(NodeGetter):
@@ -202,25 +149,12 @@ class Dmname(NodeGetter):
     """
     # pylint: disable=too-few-public-methods
 
-    map_requires = ['SYSFS']
-
     @staticmethod
-    def getter(maps):
-
-        def the_func(node):
-            """
-            Calculates the dm-name.
-
-            :param node: the node
-            :returns: the value to display for ``node``
-            :rtype: str or NoneType
-            """
-            sysfs = maps['SYSFS'].get(node)
-            if sysfs is None:
-                return None
-            return sysfs.get('dm/name')
-
-        return the_func
+    def getter(node):
+        try:
+            return Dict.get_value(node, ['SYSFS', 'dm/name'])
+        except DAGValueError:
+            return None
 
 
 class DmUuidPrefix(NodeGetter):
@@ -229,31 +163,18 @@ class DmUuidPrefix(NodeGetter):
     """
     # pylint: disable=too-few-public-methods
 
-    map_requires = ['UDEV']
-
     @staticmethod
-    def getter(maps):
-
-        def the_func(node):
-            """
-            Calculates the dm-uuid-prefix.
-
-            :param node: the node
-            :returns: the value to display for ``node``
-            :rtype: str or NoneType
-            """
-            udev_info = maps['UDEV'].get(node)
-            if udev_info is None:
-                return None
-            dmuuid = udev_info.get('DM_UUID')
+    def getter(node):
+        try:
+            dmuuid = Dict.get_value(node, ['UDEV', 'DM_UUID'])
             if dmuuid is None:
                 return None
-            (dmcat, dash, _) = dmuuid.partition("-")
-            if dash == '':
+            (_, match) = DMUUIDParse().parse(dmuuid)
+            if match is None:
                 return None
-            return dmcat
-
-        return the_func
+            return match['subsystem']
+        except DAGValueError:
+            return None
 
 
 class Identifier(NodeGetter):
@@ -262,22 +183,9 @@ class Identifier(NodeGetter):
     """
     # pylint: disable=too-few-public-methods
 
-    map_requires = ['identifier']
-
     @staticmethod
-    def getter(maps):
-
-        def the_func(node):
-            """
-            Calculates an identifier.
-
-            :param node: the node
-            :returns: the value to display for ``node``
-            :rtype: str or NoneType
-            """
-            return maps['identifier'][node]
-
-        return the_func
+    def getter(node):
+        return Dict.get_value(node, ['identifier'])
 
 
 class IdPath(NodeGetter):
@@ -286,23 +194,12 @@ class IdPath(NodeGetter):
     """
     # pylint: disable=too-few-public-methods
 
-    map_requires = ['UDEV']
-
     @staticmethod
-    def getter(maps):
-
-        def the_func(node):
-            """
-            Calculates an ID_PATH.
-
-            :param node: the node
-            :returns: the value to display for ``node``
-            :rtype: str or NoneType
-            """
-            udev_info = maps['UDEV'].get(node)
-            return udev_info and udev_info.get('ID_PATH')
-
-        return the_func
+    def getter(node):
+        try:
+            return Dict.get_value(node, ['UDEV', 'ID_PATH'])
+        except DAGValueError:
+            return None
 
 
 class IdSasPath(NodeGetter):
@@ -311,23 +208,12 @@ class IdSasPath(NodeGetter):
     """
     # pylint: disable=too-few-public-methods
 
-    map_requires = ['UDEV']
-
     @staticmethod
-    def getter(maps):
-
-        def the_func(node):
-            """
-            Calculates an ID_SAS_PATH.
-
-            :param node: the node
-            :returns: the value to display for ``node``
-            :rtype: str or NoneType
-            """
-            udev_info = maps['UDEV'].get(node)
-            return udev_info and udev_info.get('ID_SAS_PATH')
-
-        return the_func
+    def getter(node):
+        try:
+            return Dict.get_value(node, ['UDEV', 'ID_SAS_PATH'])
+        except DAGValueError:
+            return None
 
 
 class Size(NodeGetter):
@@ -339,26 +225,15 @@ class Size(NodeGetter):
     map_requires = ['SYSFS']
 
     @staticmethod
-    def getter(maps):
-
-        def the_func(node):
-            """
-            Calculates the size.
-
-            :param node: the node
-            :returns: the value to display for ``node``
-            :rtype: str or NoneType
-            """
-            sysfs = maps['SYSFS'].get(node)
-            if sysfs is None:
+    def getter(node):
+        try:
+            size = Dict.get_value(node, ['SYSFS', 'size'])
+            if size is None:
                 return None
-            size = sysfs.get('size')
-            if size is not None:
-                return str(justbytes.Size(size, justbytes.Size(512)))
             else:
-                return None
-
-        return the_func
+                return str(justbytes.Size(size, justbytes.Size(512)))
+        except DAGValueError:
+            return None
 
 
 class Subsystem(NodeGetter):
@@ -367,23 +242,12 @@ class Subsystem(NodeGetter):
     """
     # pylint: disable=too-few-public-methods
 
-    map_requires = ['UDEV']
-
     @staticmethod
-    def getter(maps):
-
-        def the_func(node):
-            """
-            Calculates a SUBSYSTEM.
-
-            :param node: the node
-            :returns: the value to display for ``node``
-            :rtype: str or NoneType
-            """
-            udev_info = maps['UDEV'].get(node)
-            return udev_info and udev_info.get('SUBSYSTEM')
-
-        return the_func
+    def getter(node):
+        try:
+            return Dict.get_value(node, ['UDEV', 'SUBSYSTEM'])
+        except DAGValueError:
+            return None
 
 
 class Sysname(NodeGetter):
@@ -392,22 +256,12 @@ class Sysname(NodeGetter):
     """
     # pylint: disable=too-few-public-methods
 
-    map_requires = ['SYSNAME']
-
     @staticmethod
-    def getter(maps):
-
-        def the_func(node):
-            """
-            Calculates a SYSNAME.
-
-            :param node: the node
-            :returns: the value to display for ``node``
-            :rtype: str or NoneType
-            """
-            return maps['SYSNAME'].get(node)
-
-        return the_func
+    def getter(node):
+        try:
+            return Dict.get_value(node, ['SYSNAME'])
+        except DAGValueError:
+            return None
 
 
 class NodeGetters(object):
