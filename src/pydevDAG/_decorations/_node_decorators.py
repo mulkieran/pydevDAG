@@ -175,6 +175,8 @@ class DevlinkValues(PyudevDecorator):
 class SysfsAttributes(PyudevDecorator):
     """
     Find sysfs attributes for the device nodes of a network graph.
+
+    Set a value for every name requested.
     """
 
     def __init__(self, args):
@@ -191,7 +193,7 @@ class SysfsAttributes(PyudevDecorator):
                     val = val.decode(sys.getfilesystemencoding())
                 res[key] = val
             except UnicodeDecodeError:
-                pass
+                res[key] = None
         attrdict['SYSFS'] = res
 
 
@@ -210,6 +212,8 @@ class Sysname(PyudevDecorator):
 class UdevProperties(PyudevDecorator):
     """
     Find udev properties for the device nodes of a network graph.
+
+    Set a value for every name requested.
     """
 
     def __init__(self, args):
@@ -217,7 +221,7 @@ class UdevProperties(PyudevDecorator):
 
     def decorate(self, device, attrdict):
         attrdict['UDEV'] = \
-           dict((k, device[k]) for k in self.names if k in device)
+           dict((k, device.get(k)) for k in self.names)
 
 
 class NodeDecorator(object):
