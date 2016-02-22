@@ -11,8 +11,8 @@ language: python
 env:
   matrix:
     - TASK=lint
-    - TASK=coverage
     - TASK=test
+    - TASK=coverage
 
 matrix:
   exclude:
