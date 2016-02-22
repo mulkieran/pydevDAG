@@ -60,7 +60,8 @@ class TestGraphNodeDecorations(object):
         for node in graph.nodes():
             nodetype = graph.node[node]['nodetype']
             assert nodetype is not pydevDAG.NodeTypes.DEVICE_PATH or \
-               graph.node[node]['UDEV']['DEVPATH'] == node
+               pydevDAG.Dict.get_value(graph.node[node], ["UDEV", "DEVPATH"]) \
+               == node
 
 
 class TestDifferenceMarkers(object):
