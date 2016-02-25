@@ -29,6 +29,7 @@
 """
 
 import argparse
+import bz2
 import os
 import sys
 import uuid
@@ -39,8 +40,8 @@ import pyudev
 
 import pydevDAG
 
-MESSAGE_UUID = uuid.UUID('4e2b605fee0340969a338a9ecc1722b5').hex
-ERROR_MESSAGE_UUID = uuid.UUID('b714a26219cc49fe9c6d70001197579b').hex
+MESSAGE_UUID = uuid.UUID('4e2b605fee0340969a338a9ecc1722b5')
+ERROR_MESSAGE_UUID = uuid.UUID('b714a26219cc49fe9c6d70001197579b')
 
 MESSAGE_IDS = {
    ERROR_MESSAGE_UUID : ['MESSAGE', 'ERROR'],
@@ -115,12 +116,11 @@ def _write_current(logdir, filename, graph):
         with open(filepath, "w") as out:
             pydevDAG.Writer.write(graph, out)
     except EnvironmentError as err:
-        message = [
-           "MESSAGE=failed to write file %s" % filename,
-           "ERROR=%s" % err,
-           "MESSAGE_ID=%s" % ERROR_MESSAGE_UUID
-        ]
-        journal.sendv(*message)
+        journal.send(
+           "failed to write file %s" % filename,
+           MESSAGE_ID=ERROR_MESSAGE_ID,
+           ERROR=err
+        )
 
 
 def _journal_current(graph, cmp_result):
@@ -131,12 +131,12 @@ def _journal_current(graph, cmp_result):
     :param int cmp_result: the result of the comparison with the previous
     """
     graph_string = pydevDAG.StringUtils.as_string(graph, pydevDAG.Writer.write)
-    message = [
-       "%s=%s" % ("GRAPH", graph_string),
-       "MESSAGE_ID=%s" % MESSAGE_UUID,
-       "CLASSIFICATION=%s" % ("equivalent" if cmp_result == 1 else "distinct")
-    ]
-    journal.sendv(*message)
+    journal.send(
+       '',
+       MESSAGE_ID=MESSAGE_UUID,
+       GRAPH=graph_string,
+       CLASSIFICATION=("equivalent" if cmp_result == 1 else "distinct")
+    )
 
 
 def _compare(graph, dirpath, filename):
@@ -169,7 +169,7 @@ def main():
 
     if args.listids:
         for uid in MESSAGE_IDS:
-            print('%s' % uid)
+            print('%s' % uid.hex)
             for key in MESSAGE_IDS[uid]:
                 print('\t%s' % key)
         return 0
