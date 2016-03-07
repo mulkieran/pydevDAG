@@ -33,6 +33,8 @@ from __future__ import unicode_literals
 
 import networkx.algorithms.isomorphism as iso
 
+from six.moves import zip # pylint: disable=redefined-builtin
+
 from .._utils import ExtendedLookup
 
 
@@ -122,7 +124,8 @@ class NodeComparison(object):
             keys.update(self.config.get(nodetype, dict()))
             getter = self.lookups[nodetype] = ExtendedLookup(keys)
 
-        return list(getter.get_values(hash1)) == list(getter.get_values(hash2))
+        values = zip(getter.get_values(hash1), getter.get_values(hash2))
+        return all(x == y for (x, y) in values)
 
 
 class CompareGraph(object):
