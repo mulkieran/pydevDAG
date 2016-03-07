@@ -123,23 +123,17 @@ def _write_current(logdir, filename, graph):
         )
 
 
-def _journal_current(graph, cmp_result):
+def _journal_current(graph):
     """
     Write a graph into the journal along with the MESSAGE_ID field.
 
     :param DiGraph graph: the graph to write
-    :param int cmp_result: the result of the comparison with the previous
     """
     graph_string = pydevDAG.StringUtils.as_string(graph, pydevDAG.Writer.write)
-    journal.send(
-       '',
-       MESSAGE_ID=MESSAGE_UUID,
-       GRAPH=graph_string,
-       CLASSIFICATION=("equivalent" if cmp_result == 1 else "distinct")
-    )
+    journal.send('', MESSAGE_ID=MESSAGE_UUID, GRAPH=graph_string)
 
 
-def _compare(graph, dirpath, filename):
+def _identical(graph, dirpath, filename):
     """
     Compare ``graph`` to previous, if any.
 
@@ -150,15 +144,14 @@ def _compare(graph, dirpath, filename):
     :returns: result of comparing graph to previous graph
     :rtype: int
 
-    Result is 0 if graphs are identical, 1 if graphs are equivalent but not
-    identical (likely to occur as a result of a reboot), 2 if graphs are
-    neither equivalent nor identical. If no previous graph exists, return 2.
+    Result is True if graphs are identical, otherwise False.
+    If no previous graph exists, return False.
     """
     prev = _get_prev(dirpath, filename)
     if prev is not None:
         pydevDAG.GraphUtils.set_direction(prev, set_reversed=False, copy=False)
-        return pydevDAG.CompareGraph().compare(graph, prev)
-    return 2
+        return pydevDAG.CompareGraph().identical(graph, prev)
+    return False
 
 
 def main():
@@ -178,12 +171,12 @@ def main():
     graph = pydevDAG.GenerateGraph.get_graph(context, args.name)
     pydevDAG.GenerateGraph.decorate_graph(graph)
 
-    cmp_result = _compare(graph, args.dirpath, args.filename)
-    if cmp_result == 0:
+    cmp_result = _identical(graph, args.dirpath, args.filename)
+    if cmp_result == True:
         return 0
 
     _write_current(args.dirpath, args.filename, graph)
-    _journal_current(graph, cmp_result)
+    _journal_current(graph)
 
     return 0
 
