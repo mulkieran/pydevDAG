@@ -36,6 +36,7 @@ import abc
 import six
 
 from parseudev import DMUUIDParse
+from parseudev import DMUUIDParsers
 
 import justbytes
 
@@ -169,10 +170,8 @@ class DmUuidPrefix(NodeGetter):
             dmuuid = Dict.get_value(node, ['UDEV', 'DM_UUID'])
             if dmuuid is None:
                 return None
-            (_, match) = DMUUIDParse().parse(dmuuid)
-            if match is None:
-                return None
-            return match['subsystem']
+            match_dict = DMUUIDParse(DMUUIDParsers.PARSERS).parse(dmuuid)
+            return match_dict.get('component')
         except DAGValueError:
             return None
 
