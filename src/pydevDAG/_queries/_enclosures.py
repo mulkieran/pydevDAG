@@ -37,7 +37,6 @@ from collections import defaultdict
 from collections import namedtuple
 
 from parseudev import DMUUIDParse
-from parseudev import DMUUIDParsers
 
 from .._attributes import EdgeTypes
 from .._attributes import NodeTypes
@@ -183,8 +182,7 @@ class ByEnclosures(object):
                 dm_uuid = \
                    Dict.get_value(graph.node[source], ['UDEV', 'DM_UUID'])
                 if dm_uuid is not None:
-                    parser = DMUUIDParse(DMUUIDParsers.PARSERS)
-                    if parser.parse(dm_uuid)[1]['component'] == 'mpath':
+                    if DMUUIDParse().parse(dm_uuid)[1]['component'] == 'mpath':
                         return source
         return None
 
