@@ -36,8 +36,6 @@ import itertools
 from collections import defaultdict
 from collections import namedtuple
 
-from parseudev import DMUUIDParse
-
 from .._attributes import EdgeTypes
 from .._attributes import NodeTypes
 
@@ -164,32 +162,28 @@ class ByEnclosures(object):
         return subsets
 
     @staticmethod
-    def _get_mpath_device(graph, device):
+    def _get_dm_device(graph, device):
         """
-        Get the parent mpath device for ``device``.
+        Get the parent dm device for ``device``.
 
         :param DiGraph graph: the graph
         :param str device: the device
 
-        :returns: the mpath holder for this device if any
+        :returns: the dm holder for this device if any
         :rtype: str or NoneType
-
-        Assumes that the first one found is the unique one, i.e., that one
-        device can not belong to two multipath groups.
         """
         for (source, _, data) in graph.in_edges_iter(device, data=True):
             if data['edgetype'] is EdgeTypes.SLAVE:
                 dm_uuid = \
                    Dict.get_value(graph.node[source], ['UDEV', 'DM_UUID'])
                 if dm_uuid is not None:
-                    if DMUUIDParse().parse(dm_uuid)[1]['component'] == 'mpath':
-                        return source
+                    return source
         return None
 
     @classmethod
-    def _get_shared_mpath_device(cls, graph, devices):
+    def _get_shared_dm_device(cls, graph, devices):
         """
-        Get the parent mpath device for ``devices``.
+        Get the shared parent dm device for ``devices``.
 
         :param DiGraph graph: the graph
         :param devices: a sequence of devices
@@ -197,16 +191,12 @@ class ByEnclosures(object):
 
         :returns: mpath device or None if none found
         :rtype: str or NoneType
-
-        :raises DAGGraphError: if graph is malformed
         """
-        mpaths = list(
-           frozenset(cls._get_mpath_device(graph, dev) for dev in devices)
+        dms = list(
+           frozenset(cls._get_dm_device(graph, dev) for dev in devices)
         )
-        if len(mpaths) > 1:
-            raise DAGGraphError('device has more than one mpath parent')
-        elif len(mpaths) == 1:
-            return mpaths[0]
+        if len(dms) == 1:
+            return dms[0]
         else:
             return None
 
@@ -250,7 +240,7 @@ class ByEnclosures(object):
                     raise DAGGraphError('more than one disk per enclosure slot')
 
                 devices = list(set(i.target for i in info_list))
-                mpath = cls._get_shared_mpath_device(graph, devices)
+                mpath = cls._get_shared_dm_device(graph, devices)
 
                 if mpath is not None:
                     target = mpath
