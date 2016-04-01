@@ -16,6 +16,7 @@
                     "DEVNAME",
                     "DEVPATH",
                     "DEVTYPE",
+                    "DM_NAME",
                     "DM_UUID",
                     "ID_PATH",
                     "ID_SAS_PATH",
@@ -24,8 +25,7 @@
             },
             "SYSFS": {
                 "args": [
-                    "size",
-                    "dm/name"
+                    "size"
                 ]
             }
         },

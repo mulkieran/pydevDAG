@@ -152,7 +152,7 @@ class Dmname(NodeGetter):
     @staticmethod
     def getter(node):
         try:
-            return Dict.get_value(node, ['SYSFS', 'dm/name'])
+            return Dict.get_value(node, ['UDEV', 'DM_NAME'])
         except DAGValueError:
             return None
 
