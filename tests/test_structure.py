@@ -180,7 +180,7 @@ class TestEnclosureGraphs(object):
 
         edgetypes = nx.get_edge_attributes(graph, 'edgetype')
         assert all(
-           v is pydevDAG.EdgeTypes.ENCLOSUREBAY for (k, v) in edgetypes.values()
+           v is pydevDAG.EdgeTypes.ENCLOSUREBAY for (k, v) in edgetypes.items()
         )
 
         identifiers = nx.get_edge_attributes(graph, 'identifier')
