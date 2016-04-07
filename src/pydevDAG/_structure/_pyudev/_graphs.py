@@ -129,8 +129,8 @@ class PartitionGraphs(PyudevGraph):
 
     @classmethod
     def complete(cls, context, **kwargs):
-        block_devices = context.list_devices(subsystem="block")
-        partitions = block_devices.match_property('DEVTYPE', 'partition')
+        devices = context.list_devices(subsystem="block")
+        partitions = devices.match_property('DEVTYPE', 'partition')
         graphs = (cls.partition_graph(d) for d in partitions)
         return nx.compose_all(chain([nx.DiGraph()], graphs), name="partiton")
 
