@@ -65,6 +65,12 @@ def get_parser():
        default="graph",
        help="a name for the graph"
     )
+    parser.add_argument(
+       "--base",
+       default=10,
+       help="base to display sizes in",
+       type=int
+    )
     return parser
 
 def do_action(graph, action, out):
@@ -89,6 +95,10 @@ def main():
     The main method for listing device graphs.
     """
     args = get_parser().parse_args()
+    if args.base != 10:
+        from justbytes import SizeConfig
+        from justbytes import StrConfig
+        SizeConfig.set_str_config(StrConfig(base=args.base))
 
     context = pyudev.Context()
     graph = pydevDAG.GenerateGraph.get_graph(context, args.name)
