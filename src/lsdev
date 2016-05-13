@@ -96,9 +96,14 @@ def main():
     """
     args = get_parser().parse_args()
     if args.base != 10:
-        from justbytes import SizeConfig
-        from justbytes import StrConfig
-        SizeConfig.set_str_config(StrConfig(base=args.base))
+        from justbytes import Config
+        from justbytes import DigitsConfig
+        from justbytes import DisplayConfig
+        from justbytes import ValueConfig
+        Config.set_display_config(
+           DisplayConfig(digits_config=DigitsConfig(use_letters=False))
+        )
+        Config.set_value_config(ValueConfig(base=args.base))
 
     context = pyudev.Context()
     graph = pydevDAG.GenerateGraph.get_graph(context, args.name)

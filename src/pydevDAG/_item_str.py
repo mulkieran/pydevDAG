@@ -229,7 +229,7 @@ class Size(NodeGetter):
             if size is None:
                 return None
             else:
-                return str(justbytes.Size(size, justbytes.Size(512)))
+                return str(justbytes.Range(size, justbytes.Range(512)))
         except DAGValueError:
             return None
 
