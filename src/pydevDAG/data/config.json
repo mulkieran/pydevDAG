@@ -1,4 +1,11 @@
 {
+    "graph_types" : [
+       "DM_PARTITION_GRAPHS",
+       "ENCLOSURE_GRAPHS",
+       "PARTITION_GRAPHS",
+       "SPINDLE_GRAPHS",
+       "SYSFS_BLOCK_GRAPHS"
+    ],
     "nodeattributes": [
         "nodetype",
         "identifier"

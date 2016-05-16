@@ -77,3 +77,12 @@ class _Config(object):
         :rtype: dict or str
         """
         return self.config['persistantattributes']
+
+    def get_graph_type_spec(self):
+        """
+        Get specification about the structure of the graph.
+
+        :returns: the kinds of graphs that make up the whole graph
+        :rtype: dict of str
+        """
+        return self.config['graph_types']
