@@ -70,6 +70,9 @@ class _Config(object):
         Get specifications about what attributes are to be regarded as
         persistant.
 
+        Persistant attributes are attributes that are expected to remain the
+        same for a given device across reboots and other changes.
+
         :returns: the specification for persistant attributes
         :rtype: dict or str
         """
