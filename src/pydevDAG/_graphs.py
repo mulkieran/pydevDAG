@@ -57,8 +57,12 @@ class GenerateGraph(object):
     Coordinate graph generating activities.
     """
 
-    @staticmethod
-    def get_graph(context, name):
+    CONFIG = _Config(
+        os.path.join(os.path.dirname(__file__), 'data/config.json')
+    )
+
+    @classmethod
+    def get_graph(cls, context, name):
         """
         Get a complete graph storage graph.
 
@@ -79,17 +83,14 @@ class GenerateGraph(object):
            graph_classes
         )
 
-    @staticmethod
-    def decorate_graph(graph):
+    @classmethod
+    def decorate_graph(cls, graph):
         """
         Decorate a graph with additional properties.
 
         :param `DiGraph` graph: the graph
         """
-        config = _Config(
-            os.path.join(os.path.dirname(__file__), 'data/config.json')
-        )
-        spec = config.get_node_decoration_spec()
+        spec = cls.CONFIG.get_node_decoration_spec()
         decorator = NodeDecorator(spec)
 
         for node in graph.nodes():
