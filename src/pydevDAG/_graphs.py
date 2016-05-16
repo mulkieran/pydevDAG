@@ -70,17 +70,11 @@ class GenerateGraph(object):
         :return: the generated graph
         :rtype: `DiGraph`
         """
-        graph_classes = [
-           _structure.PyudevGraphs.DM_PARTITION_GRAPHS,
-           _structure.PyudevGraphs.ENCLOSURE_GRAPHS,
-           _structure.PyudevGraphs.PARTITION_GRAPHS,
-           _structure.PyudevGraphs.SPINDLE_GRAPHS,
-           _structure.PyudevGraphs.SYSFS_BLOCK_GRAPHS
-        ]
+        graph_classes = cls.CONFIG.get_graph_type_spec()
         return _structure.PyudevAggregateGraph.graph(
            context,
            name,
-           graph_classes
+           [getattr(_structure.PyudevGraphs, name) for name in graph_classes]
         )
 
     @classmethod
