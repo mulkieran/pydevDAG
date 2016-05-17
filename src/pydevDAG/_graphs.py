@@ -33,8 +33,6 @@ from __future__ import unicode_literals
 
 import os
 
-from collections import defaultdict
-
 import networkx
 
 from ._decorations import NodeDecorator
@@ -42,8 +40,6 @@ from ._decorations import NodeDecorator
 from ._config import _Config
 
 from . import _display
-from . import _item_str
-from . import _print
 from . import _structure
 
 
@@ -123,74 +119,3 @@ class DisplayGraph(object):
 
         _display.GraphTransformers.xform(dot_graph, xformers)
         return dot_graph
-
-
-class PrintGraph(object):
-    """
-    Print a textual representation of the graph.
-    """
-    # pylint: disable=too-few-public-methods
-
-    @staticmethod
-    def print_graph(out, graph):
-        """
-        Print a graph.
-
-        :param `file` out: print destination
-        :param `DiGraph` graph: the graph
-        """
-        justification = defaultdict(lambda: '<')
-        justification['SIZE'] = '>'
-        name_funcs = [
-           _item_str.NodeGetters.DMNAME,
-           _item_str.NodeGetters.DEVNAME,
-           _item_str.NodeGetters.SYSNAME,
-           _item_str.NodeGetters.IDENTIFIER
-        ]
-        path_funcs = [
-           _item_str.NodeGetters.IDSASPATH,
-           _item_str.NodeGetters.IDPATH
-        ]
-        line_info = _print.GraphLineInfo(
-           graph,
-           [
-              'NAME',
-              'DEVNAME',
-              'SUBSYSTEM',
-              'DEVTYPE',
-              'DIFFSTATUS',
-              'DM_SUBSYSTEM',
-              'ID_PATH',
-              'SIZE'
-           ],
-           justification,
-           {
-              'NAME' : name_funcs,
-              'DEVNAME' : [_item_str.NodeGetters.DEVNAME],
-              'DEVTYPE': [_item_str.NodeGetters.DEVTYPE],
-              'DM_SUBSYSTEM' : [_item_str.NodeGetters.DMUUIDSUBSYSTEM],
-              'DIFFSTATUS': [_item_str.NodeGetters.DIFFSTATUS],
-              'ID_PATH' : path_funcs,
-              'SIZE': [_item_str.NodeGetters.SIZE],
-              'SUBSYSTEM': [_item_str.NodeGetters.SUBSYSTEM]
-           }
-        )
-
-        lines = _print.GraphLineArrangements.node_strings_from_graph(
-           _print.GraphLineArrangementsConfig(
-              line_info.info,
-              lambda k, v: str(v),
-              'NAME'
-           ),
-           graph
-        )
-
-        lines = list(_print.GraphXformLines.xform(line_info.keys, lines))
-        lines = _print.Print.lines( # pylint: disable=redefined-variable-type
-           line_info.keys,
-           lines,
-           2,
-           line_info.alignment
-        )
-        for line in lines:
-            print(line, end="\n", file=out)

@@ -17,12 +17,6 @@ arg_map = {
       "--disable=bad-continuation",
       "--msg-template='{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}'"
    ],
-   "src/lsdev" : [
-      "--reports=no",
-      "--disable=I",
-      "--disable=bad-continuation",
-      "--msg-template='{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}'"
-   ],
    "src/pydevDAG" : [
       "--reports=no",
       "--disable=I",
@@ -32,12 +26,6 @@ arg_map = {
       "--msg-template='{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}'"
    ],
    "src/reportdev" : [
-      "--reports=no",
-      "--disable=I",
-      "--disable=bad-continuation",
-      "--msg-template='{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}'"
-   ],
-   "src/showdev" : [
       "--reports=no",
       "--disable=I",
       "--disable=bad-continuation",
