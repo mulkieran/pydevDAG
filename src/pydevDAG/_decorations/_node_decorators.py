@@ -91,7 +91,7 @@ class Pyudev(Domain):
         :param objects: a list of object that require a pyudev device
         """
         objects = list(objects)
-        if any(o.DOMAIN is not self.__class__ for o in objects):
+        if any(o.DOMAIN is not self.__class__ for o in objects): # pragma: no cover
             raise DAGValueError('objects must be in this domain')
 
         self.objects = objects
@@ -100,7 +100,7 @@ class Pyudev(Domain):
     def decorate(self, node, attrdict):
         try:
             device = pyudev.Device.from_path(self.context, node)
-        except pyudev.DeviceNotFoundError:
+        except pyudev.DeviceNotFoundError: # pragma: no cover
             return
 
         for obj in self.objects:
