@@ -33,7 +33,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import abc
-import sys
 
 from itertools import groupby
 
@@ -188,11 +187,8 @@ class SysfsAttributes(PyudevDecorator):
         res = dict()
         for key in self.names:
             try:
-                val = attributes.get(key)
-                if val is not None and not isinstance(val, six.text_type):
-                    val = val.decode(sys.getfilesystemencoding())
-                res[key] = val
-            except UnicodeDecodeError:
+                res[key] = attributes.asstring(key)
+            except (KeyError, UnicodeDecodeError): # pragma: no cover
                 res[key] = None
         attrdict['SYSFS'] = res
 
