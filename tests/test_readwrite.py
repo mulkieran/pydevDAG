@@ -59,18 +59,3 @@ class TestStringUtils(object):
         res = pydevDAG.StringUtils.from_string(strinput, pydevDAG.Reader.read)
         assert isinstance(res, nx.DiGraph)
         assert len(res) == 0
-
-    def test_inverses(self):
-        """
-        Test that writing the string and then reading it yields identical graph.
-        """
-
-        val = pydevDAG.StringUtils.as_string(DECORATED, pydevDAG.Writer.write)
-        res = pydevDAG.StringUtils.from_string(val, pydevDAG.Reader.read)
-
-        assert pydevDAG.Isomorphisms.is_equivalent(
-           DECORATED,
-           res,
-           lambda x, y: x == y,
-           lambda x, y: x == y
-        )

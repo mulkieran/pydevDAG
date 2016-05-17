@@ -35,20 +35,13 @@ from ._errors import DAGError
 from ._item_str import NodeGetter
 from ._item_str import NodeGetters
 
-from ._graphs import CompareGraph
-from ._graphs import DiffGraph
 from ._graphs import DisplayGraph
 from ._graphs import GenerateGraph
-from ._graphs import GraphIsomorphism
 from ._graphs import PrintGraph
 
 from ._decorations import Decorator
 from ._decorations import NodeDecorator
 from ._decorations import DifferenceMarkers
-
-from ._comparison import Differences
-from ._comparison import Isomorphisms
-from ._comparison import Matcher
 
 from ._print import GraphLineArrangements
 from ._print import GraphLineArrangementsConfig

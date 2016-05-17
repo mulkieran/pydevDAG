@@ -31,25 +31,20 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import itertools
 import os
 
 from collections import defaultdict
 
 import networkx
 
-from ._attributes import ElementTypes
-
 from ._decorations import NodeDecorator
 
 from ._config import _Config
 
-from . import _comparison
 from . import _display
 from . import _item_str
 from . import _print
 from . import _structure
-from . import _utils
 
 
 class GenerateGraph(object):
@@ -91,23 +86,6 @@ class GenerateGraph(object):
             decorator.decorate(node, graph.node[node])
 
         graph.graph['decorations'] = spec
-
-
-class CompareGraph(_comparison.CompareGraph):
-    """
-    Graph comparison.
-    """
-    # pylint: disable=too-few-public-methods
-
-    def __init__(self):
-        """
-        Initializer.
-        """
-        config = _Config(
-            os.path.join(os.path.dirname(__file__), 'data/config.json')
-        )
-        spec = config.get_persistant_attributes_spec()
-        super(CompareGraph, self).__init__(spec)
 
 
 class DisplayGraph(object):
@@ -213,135 +191,6 @@ class PrintGraph(object):
            lines,
            2,
            line_info.alignment
-        )
-        for line in lines:
-            print(line, end="\n", file=out)
-
-
-class DiffGraph(object):
-    """
-    Take the difference of two graphs.
-    """
-    # pylint: disable=too-few-public-methods
-
-    @staticmethod
-    def do_diff(graph1, graph2, diff):
-        """
-        Generate the appropriate graph.
-
-        :param `DiGraph` graph1: a graph
-        :param `DiGraph` graph2: a graph
-        :param str diff: the diff to perform
-        """
-        node_matcher = _comparison.Matcher(
-           ['identifier', 'nodetype'],
-           ElementTypes.NODE
-        )
-        match_func = node_matcher.get_match
-        edge_matcher = lambda g1, g2: lambda x, y: x == y
-        if diff == "full":
-            return _comparison.Differences.full_diff(
-               graph1,
-               graph2,
-               match_func,
-               edge_matcher
-            )
-        elif diff == "left":
-            return _comparison.Differences.left_diff(
-               graph1,
-               graph2,
-               match_func,
-               edge_matcher
-            )
-        elif diff == "right":
-            return _comparison.Differences.right_diff(
-               graph1,
-               graph2,
-               match_func,
-               edge_matcher
-            )
-        else:
-            assert False
-
-
-class GraphIsomorphism(object):
-    """
-    Get isomorphisms between two graphs.
-    """
-    # pylint: disable=too-few-public-methods
-
-    @staticmethod
-    def isomorphisms_iter(graph1, graph2):
-        """
-        Isomorphisms between ``graph1`` and ``graph2``.
-
-        The type of storage entity that a node represents is considered
-        significant, but not its identity, unless it is a disk with a WWN.
-
-        It should always be the case that WWN nodes map to each other.
-
-        :param `DiGraph` graph1: a graph
-        :param `DiGraph` graph2: a graph
-        :returns: generator of graph isomorphisms
-        :rtype: generator of dict of node * node
-        """
-
-        return _comparison.Isomorphisms.isomorphisms_iter(
-           graph1,
-           graph2,
-           _comparison.NodeComparison([]).equivalent,
-           lambda x, y: x['edgetype'] is y['edgetype']
-        )
-
-    @staticmethod
-    def _minimized_isos(isos, maxnum):
-        """
-        Returns a generator of minimized isos, no longer than ``maxnum``.
-
-        :param isos: an iterable of isos
-        :param int maxnum: the maximum number to yield
-        """
-        return itertools.islice(
-           (_utils.GeneralUtils.minimize_mapping(iso) for iso in isos),
-           0,
-           maxnum
-        )
-
-    @classmethod
-    def print_isomorphism(cls, out, graph1, graph2):
-        """
-        Print the first isomorphism, if any.
-
-        :param `file` out: print destination
-        :param DiGraph graph1: the first graph
-        :param DiGraph graph2: the second graph
-        """
-        isos = cls.isomorphisms_iter(graph1, graph2)
-        minimized = list(cls._minimized_isos(isos, 10))
-
-        if len(minimized) is 0:
-            print('No isomorphism discovered.', end="\n", file=out)
-            return
-
-        isomorphism = min(minimized, key=len)
-
-        name_funcs = [
-           _item_str.NodeGetters.DMNAME,
-           _item_str.NodeGetters.DEVNAME,
-           _item_str.NodeGetters.IDENTIFIER
-        ]
-        mapinfo = _print.MapLineInfos(
-           graph1,
-           graph2,
-           name_funcs,
-           ('GRAPH 1', 'GRAPH 2')
-        )
-        lines = mapinfo.info(isomorphism)
-        lines = _print.Print.lines( # pylint: disable=redefined-variable-type
-           mapinfo.keys,
-           lines,
-           2,
-           {'GRAPH 1' : '<', 'GRAPH 2' : '>'}
         )
         for line in lines:
             print(line, end="\n", file=out)

@@ -11,18 +11,6 @@ arg_map = {
       "--disable=bad-continuation",
       "--msg-template='{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}'"
    ],
-   "src/cmpdev" : [
-      "--reports=no",
-      "--disable=I",
-      "--disable=bad-continuation",
-      "--msg-template='{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}'"
-   ],
-   "src/diffdev" : [
-      "--reports=no",
-      "--disable=I",
-      "--disable=bad-continuation",
-      "--msg-template='{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}'"
-   ],
    "src/journaldev" : [
       "--reports=no",
       "--disable=I",
