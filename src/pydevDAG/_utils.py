@@ -31,8 +31,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import functools
-
 import networkx as nx
 
 from ._errors import DAGValueError
@@ -94,75 +92,6 @@ class GraphUtils(object):
             graph = cls.reverse(graph, copy=copy)
 
         return graph
-
-
-class GeneralUtils(object):
-    """
-    General purpose utilities.
-    """
-
-    @staticmethod
-    def str_key_func_gen(func):
-        """
-        A wrapper function that generates a function that yields a str
-        for all values.
-
-        :param func: a function that yields a result when applied to an arg
-        :type func: 'a -> *
-        """
-
-        @functools.wraps(func)
-        def key_func(value):
-            """
-            Transforms the result of func to a str type if it is not already.
-            None becomes '', so that its value will appear first, all other
-            non-str values are converted to str.
-
-            :param `a value: a value to pass to func
-            """
-            res = func(value)
-            return '' if res is None else str(res)
-
-        return key_func
-
-    @staticmethod
-    def composer(funcs):
-        """
-        Composes a list of funcs into a single func.
-
-        :param funcs: the functions
-        :type funcs: list of (* -> (str or NoneType))
-
-        :returns: a function to find a value for a node
-        :rtype: * -> (str or NoneType)
-        """
-        def the_func(node):
-            """
-            Returns a value for the node.
-            :param * node: a node
-            :returns: a value
-            :rtype: str or NoneType
-            """
-            return functools.reduce(
-               lambda v, f: v if v is not None else f(node),
-               funcs,
-               None
-            )
-        return the_func
-
-    @staticmethod
-    def minimize_mapping(mapping):
-        """
-        Return a minimized version of ``mapping``.
-
-        :param dict mapping: any mapping
-        :returns: a minimized mapping
-        :rtype: dict
-
-        The new mapping is the same, except that all instances where k == v
-        are missing.
-        """
-        return dict((k, v) for (k, v) in mapping.items() if k != v)
 
 
 class Dict(object):
