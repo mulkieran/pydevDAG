@@ -33,13 +33,10 @@ from __future__ import unicode_literals
 
 import os
 
-import networkx
-
 from ._decorations import NodeDecorator
 
 from ._config import _Config
 
-from . import _display
 from . import _structure
 
 
@@ -82,40 +79,3 @@ class GenerateGraph(object):
             decorator.decorate(node, graph.node[node])
 
         graph.graph['decorations'] = spec
-
-
-class DisplayGraph(object):
-    """
-    Displaying a generated multigraph by transformation to a graphviz graph.
-    """
-    # pylint: disable=too-few-public-methods
-
-    @staticmethod
-    def convert_graph(graph):
-        """
-        Convert graph to graphviz format.
-
-        :param `DiGraph` graph: the graph
-        :returns: a graphviz graph
-
-        Designate its general layout and mark or rearrange nodes as appropriate.
-        """
-        dot_graph = networkx.to_agraph(graph) # pylint: disable=no-member
-        dot_graph.graph_attr.update(rankdir="LR")
-        dot_graph.layout(prog="dot")
-
-        xformers = [
-           _display.SpindleTransformer,
-           _display.PartitionTransformer,
-           _display.PartitionEdgeTransformer,
-           _display.CongruenceEdgeTransformer,
-           _display.EnclosureBayTransformer,
-           _display.EnclosureTransformer,
-           _display.AddedNodeTransformer,
-           _display.RemovedNodeTransformer,
-           _display.AddedEdgeTransformer,
-           _display.RemovedEdgeTransformer
-        ]
-
-        _display.GraphTransformers.xform(dot_graph, xformers)
-        return dot_graph
