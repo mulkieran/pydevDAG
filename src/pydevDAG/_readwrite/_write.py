@@ -39,7 +39,6 @@ import networkx as nx
 
 from parseudev import Devlink
 
-from pydevDAG._attributes import DiffStatuses
 from pydevDAG._attributes import EdgeTypes
 from pydevDAG._attributes import NodeTypes
 
@@ -159,24 +158,6 @@ class DevlinkRewriter(ElementRewriter):
             devlink[key] = \
                None if value is None else [Devlink(d) for d in value]
 
-class NodeDiffStatusRewriter(ElementRewriter):
-    """
-    Rewrites node diff status.
-    """
-
-    @staticmethod
-    def stringize(graph, node):
-        return DefaultRewriters.rewrite_node_gen(graph, node, 'diffstatus', str)
-
-    @staticmethod
-    def destringize(graph, node):
-        return DefaultRewriters.rewrite_node_gen(
-           graph,
-           node,
-           'diffstatus',
-           DiffStatuses.get_value
-        )
-
 class EdgeTypeRewriter(ElementRewriter):
     """
     Rewrites edge type.
@@ -195,25 +176,6 @@ class EdgeTypeRewriter(ElementRewriter):
            EdgeTypes.get_value
         )
 
-class EdgeDiffStatusRewriter(ElementRewriter):
-    """
-    Rewrites edge diff status.
-    """
-
-    @staticmethod
-    def stringize(graph, edge):
-        return DefaultRewriters.rewrite_edge_gen(graph, edge, 'diffstatus', str)
-
-    @staticmethod
-    def destringize(graph, edge):
-        return DefaultRewriters.rewrite_edge_gen(
-           graph,
-           edge,
-           'diffstatus',
-           DiffStatuses.get_value
-        )
-
-
 class Rewriter(object):
     """
     Rewrite graph for output.
@@ -222,12 +184,10 @@ class Rewriter(object):
 
     _NODE_REWRITERS = [
        DevlinkRewriter,
-       NodeDiffStatusRewriter,
        NodeTypeRewriter
     ]
 
     _EDGE_REWRITERS = [
-       EdgeDiffStatusRewriter,
        EdgeTypeRewriter
     ]
 

@@ -25,7 +25,6 @@
 
     .. moduleauthor::  Anne Mulhern  <amulhern@redhat.com>
 """
-from ._attributes import DiffStatuses
 from ._attributes import EdgeTypes
 from ._attributes import ElementTypes
 from ._attributes import NodeTypes
