@@ -65,19 +65,6 @@ class _Config(object):
         """
         return self.config['nodedecorations']
 
-    def get_persistant_attributes_spec(self):
-        """
-        Get specifications about what attributes are to be regarded as
-        persistant.
-
-        Persistant attributes are attributes that are expected to remain the
-        same for a given device across reboots and other changes.
-
-        :returns: the specification for persistant attributes
-        :rtype: dict or str
-        """
-        return self.config['persistantattributes']
-
     def get_graph_type_spec(self):
         """
         Get specification about the structure of the graph.
