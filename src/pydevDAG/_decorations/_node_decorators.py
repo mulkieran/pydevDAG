@@ -137,8 +137,6 @@ class PyudevDecorator(object):
         raise NotImplementedError()
 
 
-
-
 class DevlinkValues(PyudevDecorator):
     """
     Add the informational part of device links to the graph.
