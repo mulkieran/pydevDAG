@@ -64,53 +64,6 @@ class TestGraphNodeDecorations(object):
                == node
 
 
-class TestDifferenceMarkers(object):
-    """
-    Test markers for differences.
-    """
-
-    def test_empty_differences(self):
-        """
-        Test that an empty difference value leads to an empty attribute table.
-        """
-        markers = pydevDAG.DifferenceMarkers.node_differences(
-           GRAPH,
-           networkx.DiGraph(),
-           "present"
-        )
-        assert not markers['diffstatus']
-
-        markers = pydevDAG.DifferenceMarkers.edge_differences(
-           GRAPH,
-           networkx.DiGraph(),
-           "present"
-        )
-        assert not markers['diffstatus']
-
-    def test_equal_differences(self):
-        """
-        Test that an equal difference gives an attribute table w/ an entry
-        for every node.
-        """
-        markers = pydevDAG.DifferenceMarkers.node_differences(
-           GRAPH,
-           GRAPH.copy(),
-           "present"
-        )
-        diffstats = markers['diffstatus']
-        assert len(diffstats) == len(GRAPH)
-        assert all(diffstats[n] == 'present' for n in GRAPH)
-
-        markers = pydevDAG.DifferenceMarkers.edge_differences(
-           GRAPH,
-           GRAPH.copy(),
-           "present"
-        )
-        diffstats = markers['diffstatus']
-        assert len(diffstats) == len(GRAPH.edges())
-        assert all(diffstats[e] == 'present' for e in GRAPH.edges())
-
-
 class TestNodeDecorating(object):
     """
     Test actually decorating a graph.
