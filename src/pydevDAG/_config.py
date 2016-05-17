@@ -53,7 +53,7 @@ class _Config(object):
         try:
             with open(path) as instream:
                 self.config = json.load(instream)
-        except (ValueError, EnvironmentError) as err:
+        except (ValueError, EnvironmentError) as err: # pragma: no cover
             raise DAGValueError(err)
 
     def get_node_decoration_spec(self):
