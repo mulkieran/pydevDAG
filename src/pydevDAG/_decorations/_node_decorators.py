@@ -175,6 +175,8 @@ class DevlinkValues(PyudevDecorator):
 class SysfsAttributes(PyudevDecorator):
     """
     Find sysfs attributes for the device nodes of a network graph.
+
+    Set a value for every name requested.
     """
 
     def __init__(self, args):
@@ -191,7 +193,7 @@ class SysfsAttributes(PyudevDecorator):
                     val = val.decode(sys.getfilesystemencoding())
                 res[key] = val
             except UnicodeDecodeError:
-                pass
+                res[key] = None
         attrdict['SYSFS'] = res
 
 
@@ -210,6 +212,8 @@ class Sysname(PyudevDecorator):
 class UdevProperties(PyudevDecorator):
     """
     Find udev properties for the device nodes of a network graph.
+
+    Set a value for every name requested.
     """
 
     def __init__(self, args):
@@ -217,7 +221,7 @@ class UdevProperties(PyudevDecorator):
 
     def decorate(self, device, attrdict):
         attrdict['UDEV'] = \
-           dict((k, device[k]) for k in self.names if k in device)
+           dict((k, device.get(k)) for k in self.names)
 
 
 class NodeDecorator(object):
@@ -239,11 +243,13 @@ class NodeDecorator(object):
         :param config: configuration for node decorators
         :type config: dict (JSON)
         """
+        # list of tuple of NodeType * dict
         nodeconfigs = (
            (NodeTypes.get_value(k), v) for (k, v) in config.items()
         )
         configs = [(k, v) for (k, v) in nodeconfigs if k is not None]
 
+        # map of NodeType * (list of Domain)
         self.table = dict((k, self.get_decorator(v)) for (k, v) in configs)
 
     def get_decorator(self, config):
@@ -254,8 +260,10 @@ class NodeDecorator(object):
         :type config: dict (JSON)
 
         :returns: a sequence of objects for decorating
+        :rtype: list of Domain
         """
         # Find all available classes for a given key
+        # list of tuple of type * dict (JSON)
         klasses = [(self._FUNCTIONS.get(k), v) for (k, v) in config.items()]
 
         # sort the objects by their domain

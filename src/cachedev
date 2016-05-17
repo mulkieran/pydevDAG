@@ -29,6 +29,7 @@
 """
 
 import argparse
+import bz2
 import os
 import sys
 import uuid
@@ -39,8 +40,8 @@ import pyudev
 
 import pydevDAG
 
-MESSAGE_UUID = uuid.UUID('4e2b605fee0340969a338a9ecc1722b5').hex
-ERROR_MESSAGE_UUID = uuid.UUID('b714a26219cc49fe9c6d70001197579b').hex
+MESSAGE_UUID = uuid.UUID('4e2b605fee0340969a338a9ecc1722b5')
+ERROR_MESSAGE_UUID = uuid.UUID('b714a26219cc49fe9c6d70001197579b')
 
 MESSAGE_IDS = {
    ERROR_MESSAGE_UUID : ['MESSAGE', 'ERROR'],
@@ -115,31 +116,24 @@ def _write_current(logdir, filename, graph):
         with open(filepath, "w") as out:
             pydevDAG.Writer.write(graph, out)
     except EnvironmentError as err:
-        message = [
-           "MESSAGE=failed to write file %s" % filename,
-           "ERROR=%s" % err,
-           "MESSAGE_ID=%s" % ERROR_MESSAGE_UUID
-        ]
-        journal.sendv(*message)
+        journal.send(
+           "failed to write file %s" % filename,
+           MESSAGE_ID=ERROR_MESSAGE_ID,
+           ERROR=err
+        )
 
 
-def _journal_current(graph, cmp_result):
+def _journal_current(graph):
     """
     Write a graph into the journal along with the MESSAGE_ID field.
 
     :param DiGraph graph: the graph to write
-    :param int cmp_result: the result of the comparison with the previous
     """
     graph_string = pydevDAG.StringUtils.as_string(graph, pydevDAG.Writer.write)
-    message = [
-       "%s=%s" % ("GRAPH", graph_string),
-       "MESSAGE_ID=%s" % MESSAGE_UUID,
-       "CLASSIFICATION=%s" % ("equivalent" if cmp_result == 1 else "distinct")
-    ]
-    journal.sendv(*message)
+    journal.send('', MESSAGE_ID=MESSAGE_UUID, GRAPH=graph_string)
 
 
-def _compare(graph, dirpath, filename):
+def _identical(graph, dirpath, filename):
     """
     Compare ``graph`` to previous, if any.
 
@@ -150,15 +144,14 @@ def _compare(graph, dirpath, filename):
     :returns: result of comparing graph to previous graph
     :rtype: int
 
-    Result is 0 if graphs are identical, 1 if graphs are equivalent but not
-    identical (likely to occur as a result of a reboot), 2 if graphs are
-    neither equivalent nor identical. If no previous graph exists, return 2.
+    Result is True if graphs are identical, otherwise False.
+    If no previous graph exists, return False.
     """
     prev = _get_prev(dirpath, filename)
     if prev is not None:
         pydevDAG.GraphUtils.set_direction(prev, set_reversed=False, copy=False)
-        return pydevDAG.CompareGraph().compare(graph, prev)
-    return 2
+        return pydevDAG.CompareGraph().identical(graph, prev)
+    return False
 
 
 def main():
@@ -169,7 +162,7 @@ def main():
 
     if args.listids:
         for uid in MESSAGE_IDS:
-            print('%s' % uid)
+            print('%s' % uid.hex)
             for key in MESSAGE_IDS[uid]:
                 print('\t%s' % key)
         return 0
@@ -178,12 +171,12 @@ def main():
     graph = pydevDAG.GenerateGraph.get_graph(context, args.name)
     pydevDAG.GenerateGraph.decorate_graph(graph)
 
-    cmp_result = _compare(graph, args.dirpath, args.filename)
-    if cmp_result == 0:
+    cmp_result = _identical(graph, args.dirpath, args.filename)
+    if cmp_result == True:
         return 0
 
     _write_current(args.dirpath, args.filename, graph)
-    _journal_current(graph, cmp_result)
+    _journal_current(graph)
 
     return 0
 

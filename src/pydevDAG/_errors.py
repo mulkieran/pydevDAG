@@ -50,3 +50,9 @@ class DAGValueError(DAGError):
     Raised if bad value passed.
     """
     pass
+
+class DAGGraphError(DAGError):
+    """
+    Raised if something is wrong with graph, e.g., missing attributes.
+    """
+    pass

@@ -46,6 +46,7 @@ from ._config import _Config
 
 from . import _comparison
 from . import _display
+from . import _item_str
 from . import _print
 from . import _structure
 from . import _utils
@@ -56,8 +57,12 @@ class GenerateGraph(object):
     Coordinate graph generating activities.
     """
 
-    @staticmethod
-    def get_graph(context, name):
+    CONFIG = _Config(
+        os.path.join(os.path.dirname(__file__), 'data/config.json')
+    )
+
+    @classmethod
+    def get_graph(cls, context, name):
         """
         Get a complete graph storage graph.
 
@@ -65,30 +70,21 @@ class GenerateGraph(object):
         :return: the generated graph
         :rtype: `DiGraph`
         """
-        graph_classes = [
-           _structure.PyudevGraphs.DM_PARTITION_GRAPHS,
-           _structure.PyudevGraphs.ENCLOSURE_GRAPHS,
-           _structure.PyudevGraphs.PARTITION_GRAPHS,
-           _structure.PyudevGraphs.SPINDLE_GRAPHS,
-           _structure.PyudevGraphs.SYSFS_BLOCK_GRAPHS
-        ]
+        graph_classes = cls.CONFIG.get_graph_type_spec()
         return _structure.PyudevAggregateGraph.graph(
            context,
            name,
-           graph_classes
+           [getattr(_structure.PyudevGraphs, name) for name in graph_classes]
         )
 
-    @staticmethod
-    def decorate_graph(graph):
+    @classmethod
+    def decorate_graph(cls, graph):
         """
         Decorate a graph with additional properties.
 
         :param `DiGraph` graph: the graph
         """
-        config = _Config(
-            os.path.join(os.path.dirname(__file__), 'data/config.json')
-        )
-        spec = config.get_node_decoration_spec()
+        spec = cls.CONFIG.get_node_decoration_spec()
         decorator = NodeDecorator(spec)
 
         for node in graph.nodes():
@@ -168,14 +164,14 @@ class PrintGraph(object):
         justification = defaultdict(lambda: '<')
         justification['SIZE'] = '>'
         name_funcs = [
-           _print.NodeGetters.DMNAME,
-           _print.NodeGetters.DEVNAME,
-           _print.NodeGetters.SYSNAME,
-           _print.NodeGetters.IDENTIFIER
+           _item_str.NodeGetters.DMNAME,
+           _item_str.NodeGetters.DEVNAME,
+           _item_str.NodeGetters.SYSNAME,
+           _item_str.NodeGetters.IDENTIFIER
         ]
         path_funcs = [
-           _print.NodeGetters.IDSASPATH,
-           _print.NodeGetters.IDPATH
+           _item_str.NodeGetters.IDSASPATH,
+           _item_str.NodeGetters.IDPATH
         ]
         line_info = _print.GraphLineInfo(
            graph,
@@ -184,21 +180,21 @@ class PrintGraph(object):
               'DEVNAME',
               'SUBSYSTEM',
               'DEVTYPE',
-              'DMTYPE',
               'DIFFSTATUS',
+              'DM_SUBSYSTEM',
               'ID_PATH',
               'SIZE'
            ],
            justification,
            {
               'NAME' : name_funcs,
-              'DEVNAME' : [_print.NodeGetters.DEVNAME],
-              'DEVTYPE': [_print.NodeGetters.DEVTYPE],
-              'DMTYPE': [_print.NodeGetters.DMUUIDPREFIX],
-              'DIFFSTATUS': [_print.NodeGetters.DIFFSTATUS],
+              'DEVNAME' : [_item_str.NodeGetters.DEVNAME],
+              'DEVTYPE': [_item_str.NodeGetters.DEVTYPE],
+              'DM_SUBSYSTEM' : [_item_str.NodeGetters.DMUUIDSUBSYSTEM],
+              'DIFFSTATUS': [_item_str.NodeGetters.DIFFSTATUS],
               'ID_PATH' : path_funcs,
-              'SIZE': [_print.NodeGetters.SIZE],
-              'SUBSYSTEM': [_print.NodeGetters.SUBSYSTEM]
+              'SIZE': [_item_str.NodeGetters.SIZE],
+              'SUBSYSTEM': [_item_str.NodeGetters.SUBSYSTEM]
            }
         )
 
@@ -330,9 +326,9 @@ class GraphIsomorphism(object):
         isomorphism = min(minimized, key=len)
 
         name_funcs = [
-           _print.NodeGetters.DMNAME,
-           _print.NodeGetters.DEVNAME,
-           _print.NodeGetters.IDENTIFIER
+           _item_str.NodeGetters.DMNAME,
+           _item_str.NodeGetters.DEVNAME,
+           _item_str.NodeGetters.IDENTIFIER
         ]
         mapinfo = _print.MapLineInfos(
            graph1,

@@ -32,6 +32,9 @@ from ._attributes import NodeTypes
 
 from ._errors import DAGError
 
+from ._item_str import NodeGetter
+from ._item_str import NodeGetters
+
 from ._graphs import CompareGraph
 from ._graphs import DiffGraph
 from ._graphs import DisplayGraph
@@ -55,9 +58,6 @@ from ._print import GraphXformLines
 from ._print import MapLineInfos
 
 from ._print import Print
-
-from ._print import NodeGetter
-from ._print import NodeGetters
 
 from ._readwrite import StringUtils
 from ._readwrite import Reader

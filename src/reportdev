@@ -20,22 +20,25 @@
 # Red Hat Author(s): Anne Mulhern <amulhern@redhat.com>
 
 """
-    lsdev
-    =====
+    reportdev
+    =========
 
-    Python script for working with graphs of relationships between devices.
+    Python script for interpreting graphs of devices.
 
     .. moduleauthor::  Anne Mulhern  <amulhern@redhat.com>
 """
 
+from __future__ import print_function
+
 import argparse
 import sys
 
-import pyudev
-
 import pydevDAG
 
-_ACTIONS = ['print', 'write']
+from pydevDAG import _queries
+
+
+_ACTIONS = ['enclosures']
 
 def get_parser():
     """
@@ -46,32 +49,31 @@ def get_parser():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
+       "filename",
+       help="path of file containing graph"
+    )
+    parser.add_argument(
        "--action",
        choices=_ACTIONS,
-       default="print",
+       default="enclosures",
        help="action to perform"
     )
     parser.add_argument(
-       "--inverse",
-       action="store_true",
-       help="show devices in the inverse direction"
-    )
-    parser.add_argument(
-       "--filename",
-       help="where to put output, if none specified output is to standard out"
-    )
-    parser.add_argument(
-       "--name",
-       default="graph",
-       help="a name for the graph"
-    )
-    parser.add_argument(
-       "--base",
-       default=10,
-       help="base to display sizes in",
-       type=int
+       "--outpath",
+       help="path to put resulting output, if none, sys.stdout"
     )
     return parser
+
+def check_namespace(namespace):
+    """
+    Verify that the result of the parse makes sense and is doable.
+
+    :param `Namespace`` namespace: the resulting namespace
+    :returns: error if there is one, else None
+    :rtype: str or NoneType
+    """
+    # pylint: disable=unused-argument
+    return None
 
 def do_action(graph, action, out):
     """
@@ -83,42 +85,35 @@ def do_action(graph, action, out):
     """
     assert action in _ACTIONS
 
-    if action == "print":
-        pydevDAG.PrintGraph.print_graph(out, graph)
-    elif action == "write":
-        pydevDAG.Writer.write(graph, out)
+    if action == "enclosures":
+        html = _queries.ProcessQuery.process(graph, 'BY_ENCLOSURES')
+        print(html, file=out, end='')
     else:
         assert False
 
 def main():
     """
-    The main method for listing device graphs.
+    The main method for querying device graphs.
     """
     args = get_parser().parse_args()
-    if args.base != 10:
-        from justbytes import Config
-        from justbytes import DigitsConfig
-        from justbytes import DisplayConfig
-        from justbytes import ValueConfig
-        Config.set_display_config(
-           DisplayConfig(digits_config=DigitsConfig(use_letters=False))
-        )
-        Config.set_value_config(ValueConfig(base=args.base))
 
-    context = pyudev.Context()
-    graph = pydevDAG.GenerateGraph.get_graph(context, args.name)
-    pydevDAG.GenerateGraph.decorate_graph(graph)
+    parsing_error = check_namespace(args)
+    if parsing_error:
+        sys.exit(parsing_error)
+
+    with open(args.filename) as infile:
+        graph = pydevDAG.Reader.read(infile)
 
     graph = pydevDAG.GraphUtils.set_direction(
        graph,
-       set_reversed=not args.inverse,
+       set_reversed=False,
        copy=False
     )
 
-    if not args.filename:
+    if not args.outpath:
         do_action(graph, args.action, sys.stdout)
     else:
-        with open(args.filename, "w") as out:
+        with open(args.outpath, "w") as out:
             do_action(graph, args.action, out)
 
     return 0

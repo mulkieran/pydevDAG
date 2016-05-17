@@ -1,0 +1,32 @@
+{{#enclosures}}
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <span>Enclosure Devices: {{#names}} {{.}}{{/names}}</span>
+    </div>
+    <table class="table">
+        <thead>
+            <th>Slot Identifier</th>
+            <th>Primary Device</th>
+            <th>Disk Identifier</th>
+            <th>Member Devices</th>
+        </thead>
+        <tbody>
+            {{#disks}}
+            <tr>
+                <td>{{identifier}}</td>
+                <td>{{#target}}{{target}}{{/target}}</td>
+                <td>{{disk}}</td>
+                <td>
+                {{#devices}}
+                <div>{{.}}</div>
+                {{/devices}}
+                </td>
+            </tr>
+            {{/disks}}
+        </tbody>
+    </table>
+</div>
+{{/enclosures}}
+{{^enclosures}}
+<div>No enclosure information.</div>
+{{/enclosures}}

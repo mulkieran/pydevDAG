@@ -35,9 +35,9 @@ import abc
 
 import six
 
-from parseudev import DMUUIDParse
-
 import justbytes
+
+import parseudev
 
 from pydevDAG._attributes import DiffStatuses
 from pydevDAG._errors import DAGValueError
@@ -152,14 +152,14 @@ class Dmname(NodeGetter):
     @staticmethod
     def getter(node):
         try:
-            return Dict.get_value(node, ['SYSFS', 'dm/name'])
+            return Dict.get_value(node, ['UDEV', 'DM_NAME'])
         except DAGValueError:
             return None
 
 
-class DmUuidPrefix(NodeGetter):
+class DmUuidSubsystem(NodeGetter):
     """
-    Get the DMUUID prefix.
+    Get the subsystem prefix from the DM_UUID.
     """
     # pylint: disable=too-few-public-methods
 
@@ -169,10 +169,8 @@ class DmUuidPrefix(NodeGetter):
             dmuuid = Dict.get_value(node, ['UDEV', 'DM_UUID'])
             if dmuuid is None:
                 return None
-            (_, match) = DMUUIDParse().parse(dmuuid)
-            if match is None:
-                return None
-            return match['subsystem']
+            match_dict = parseudev.DMUUIDParse().parse(dmuuid)
+            return match_dict.get('subsystem')
         except DAGValueError:
             return None
 
@@ -231,7 +229,7 @@ class Size(NodeGetter):
             if size is None:
                 return None
             else:
-                return str(justbytes.Size(size, justbytes.Size(512)))
+                return str(justbytes.Range(size, justbytes.Range(512)))
         except DAGValueError:
             return None
 
@@ -276,7 +274,7 @@ class NodeGetters(object):
     DEVTYPE = Devtype
     DIFFSTATUS = Diffstatus
     DMNAME = Dmname
-    DMUUIDPREFIX = DmUuidPrefix
+    DMUUIDSUBSYSTEM = DmUuidSubsystem
     IDENTIFIER = Identifier
     IDPATH = IdPath
     IDSASPATH = IdSasPath
