@@ -5,54 +5,12 @@ import subprocess
 import sys
 
 arg_map = {
-   "src/catdev" : [
-      "--reports=no",
-      "--disable=I",
-      "--disable=bad-continuation",
-      "--msg-template='{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}'"
-   ],
-   "src/cmpdev" : [
-      "--reports=no",
-      "--disable=I",
-      "--disable=bad-continuation",
-      "--msg-template='{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}'"
-   ],
-   "src/diffdev" : [
-      "--reports=no",
-      "--disable=I",
-      "--disable=bad-continuation",
-      "--msg-template='{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}'"
-   ],
-   "src/journaldev" : [
-      "--reports=no",
-      "--disable=I",
-      "--disable=bad-continuation",
-      "--msg-template='{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}'"
-   ],
-   "src/lsdev" : [
-      "--reports=no",
-      "--disable=I",
-      "--disable=bad-continuation",
-      "--msg-template='{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}'"
-   ],
    "src/pydevDAG" : [
       "--reports=no",
       "--disable=I",
       "--disable=bad-continuation",
       "--disable=duplicate-code",
       "--good-names=pydevDAG,_",
-      "--msg-template='{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}'"
-   ],
-   "src/reportdev" : [
-      "--reports=no",
-      "--disable=I",
-      "--disable=bad-continuation",
-      "--msg-template='{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}'"
-   ],
-   "src/showdev" : [
-      "--reports=no",
-      "--disable=I",
-      "--disable=bad-continuation",
       "--msg-template='{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}'"
    ],
    "tests" : [

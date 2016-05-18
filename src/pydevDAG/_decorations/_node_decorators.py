@@ -33,7 +33,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import abc
-import sys
 
 from itertools import groupby
 
@@ -92,7 +91,7 @@ class Pyudev(Domain):
         :param objects: a list of object that require a pyudev device
         """
         objects = list(objects)
-        if any(o.DOMAIN is not self.__class__ for o in objects):
+        if any(o.DOMAIN is not self.__class__ for o in objects): # pragma: no cover
             raise DAGValueError('objects must be in this domain')
 
         self.objects = objects
@@ -101,7 +100,7 @@ class Pyudev(Domain):
     def decorate(self, node, attrdict):
         try:
             device = pyudev.Device.from_path(self.context, node)
-        except pyudev.DeviceNotFoundError:
+        except pyudev.DeviceNotFoundError: # pragma: no cover
             return
 
         for obj in self.objects:
@@ -136,8 +135,6 @@ class PyudevDecorator(object):
         :param dict attrdict: currently stored dict for attributes
         """
         raise NotImplementedError()
-
-
 
 
 class DevlinkValues(PyudevDecorator):
@@ -188,11 +185,8 @@ class SysfsAttributes(PyudevDecorator):
         res = dict()
         for key in self.names:
             try:
-                val = attributes.get(key)
-                if val is not None and not isinstance(val, six.text_type):
-                    val = val.decode(sys.getfilesystemencoding())
-                res[key] = val
-            except UnicodeDecodeError:
+                res[key] = attributes.asstring(key)
+            except (KeyError, UnicodeDecodeError): # pragma: no cover
                 res[key] = None
         attrdict['SYSFS'] = res
 

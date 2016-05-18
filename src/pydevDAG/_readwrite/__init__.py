@@ -29,4 +29,6 @@
 from ._readwrite import Reader
 from ._readwrite import Writer
 
+from ._write import Rewriter
+
 from ._utils import StringUtils
