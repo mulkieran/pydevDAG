@@ -39,6 +39,7 @@ from ._decorations import DifferenceMarkers
 
 from ._readwrite import StringUtils
 from ._readwrite import Reader
+from ._readwrite import Rewriter
 from ._readwrite import Writer
 
 from ._structure import PyudevGraphs

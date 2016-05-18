@@ -34,6 +34,8 @@ from __future__ import unicode_literals
 
 import networkx as nx
 
+import networkx.algorithms.isomorphism as iso
+
 import pydevDAG
 
 from ._constants import DECORATED
@@ -59,3 +61,22 @@ class TestStringUtils(object):
         res = pydevDAG.StringUtils.from_string(strinput, pydevDAG.Reader.read)
         assert isinstance(res, nx.DiGraph)
         assert len(res) == 0
+
+
+class TestRewriter(object):
+    """
+    Test rewriting of a graph.
+    """
+    # pylint: disable=too-few-public-methods
+
+    def test_inverses(self):
+        """
+        Verify that destringize inverts stringize.
+        """
+        identical = lambda x, y: x == y
+        copied = DECORATED.copy()
+        assert iso.is_isomorphic(copied, DECORATED, identical, identical)
+        pydevDAG.Rewriter.stringize(copied)
+        assert not iso.is_isomorphic(copied, DECORATED, identical, identical)
+        pydevDAG.Rewriter.destringize(copied)
+        assert iso.is_isomorphic(copied, DECORATED, identical, identical)
