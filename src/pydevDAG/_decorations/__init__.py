@@ -27,6 +27,4 @@
 """
 from ._decorations import Decorator
 
-from ._decorators import DifferenceMarkers
-
 from ._node_decorators import NodeDecorator

@@ -35,7 +35,6 @@ from ._graphs import GenerateGraph
 
 from ._decorations import Decorator
 from ._decorations import NodeDecorator
-from ._decorations import DifferenceMarkers
 
 from ._readwrite import StringUtils
 from ._readwrite import Reader
