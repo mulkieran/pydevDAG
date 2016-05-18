@@ -220,7 +220,7 @@ class Rewriter(object):
         Xform objects in graph to strings as necessary.
         :param graph: the graph
         """
-        return cls._rewrite(graph, True)
+        cls._rewrite(graph, True)
 
     @classmethod
     def destringize(cls, graph):
@@ -228,4 +228,4 @@ class Rewriter(object):
         Xform objects in graph to strings as necessary.
         :param graph: the graph
         """
-        return cls._rewrite(graph, False)
+        cls._rewrite(graph, False)
