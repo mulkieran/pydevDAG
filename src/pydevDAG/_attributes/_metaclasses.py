@@ -43,7 +43,9 @@ class AttributeValue(object):
     # pylint: disable=too-few-public-methods
     def __str__(self): # pragma: no cover
         return self.__class__.__name__
-    __repr__ = __str__
+
+    def __repr__(self): # pragma: no cover
+        return "%s()" % str(self)
 
     def __deepcopy__(self, memo):
         # pylint: disable=unused-argument
