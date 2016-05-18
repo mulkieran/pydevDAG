@@ -90,7 +90,7 @@ class DefaultRewriters(object):
         """
         try:
             value = graph.node[node][key]
-        except KeyError:
+        except KeyError: # pragma: no cover
             return
         graph.node[node][key] = func(value)
 
@@ -111,7 +111,7 @@ class DefaultRewriters(object):
         target = edge[1]
         try:
             value = graph[source][target][key]
-        except KeyError:
+        except KeyError: # pragma: no cover
             return
         graph[source][target][key] = func(value)
 
