@@ -56,11 +56,8 @@ setuptools.setup(
         'Topic :: System :: Operating System Kernels :: Linux',
     ],
     install_requires = [
-        'justbytes>0.08',
         'networkx',
-        'pygraphviz>=1.3.1',
         'parseudev>=0.6.0',
-        'pystache',
         'pyudev>=0.19',
         'six'
     ],
