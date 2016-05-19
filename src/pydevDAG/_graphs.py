@@ -59,11 +59,13 @@ class GenerateGraph(object):
         :rtype: `DiGraph`
         """
         graph_classes = cls.CONFIG.get_graph_type_spec()
-        return _structure.PyudevAggregateGraph.graph(
+        graph = _structure.PyudevAggregateGraph.graph(
            context,
            name,
            [getattr(_structure.PyudevGraphs, name) for name in graph_classes]
         )
+        graph.graph['structure'] = graph_classes
+        return graph
 
     @classmethod
     def decorate_graph(cls, graph):
