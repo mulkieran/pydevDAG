@@ -18,38 +18,12 @@
 # Red Hat Author(s): Anne Mulhern <amulhern@redhat.com>
 
 """
-    pydevDAG
-    ========
+    pydevDAG._generators
+    ====================
 
-    Graphing facilities for devices.
+    Ways to traverse the nodes in the graph.
 
     .. moduleauthor::  Anne Mulhern  <amulhern@redhat.com>
 """
-from ._attributes import EdgeTypes
-from ._attributes import ElementTypes
-from ._attributes import NodeTypes
 
-from ._errors import DAGError
-
-from ._generators import DepthFirst
-
-from ._graphs import GenerateGraph
-
-from ._decorations import Decorator
-from ._decorations import NodeDecorator
-
-from ._readwrite import StringUtils
-from ._readwrite import Reader
-from ._readwrite import Rewriter
-from ._readwrite import Writer
-
-from ._structure import PyudevGraphs
-from ._structure import PyudevAggregateGraph
-from ._structure import SysfsTraversal
-
-from ._traversal import holders
-from ._traversal import slaves
-
-from ._utils import GraphUtils
-from ._utils import Dict
-from ._utils import ExtendedLookup
+from ._depth import DepthFirst

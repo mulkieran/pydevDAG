@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2015  Red Hat, Inc.
+# Copyright (C) 2016  Red Hat, Inc.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions of
@@ -18,38 +18,35 @@
 # Red Hat Author(s): Anne Mulhern <amulhern@redhat.com>
 
 """
-    pydevDAG
-    ========
+    tests.test_generators
+    =====================
 
-    Graphing facilities for devices.
+    Tests graph generators.
 
-    .. moduleauthor::  Anne Mulhern  <amulhern@redhat.com>
+    .. moduleauthor:: mulhern <amulhern@redhat.com>
 """
-from ._attributes import EdgeTypes
-from ._attributes import ElementTypes
-from ._attributes import NodeTypes
 
-from ._errors import DAGError
 
-from ._generators import DepthFirst
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
-from ._graphs import GenerateGraph
+import pydevDAG
 
-from ._decorations import Decorator
-from ._decorations import NodeDecorator
+from ._constants import GRAPH
 
-from ._readwrite import StringUtils
-from ._readwrite import Reader
-from ._readwrite import Rewriter
-from ._readwrite import Writer
 
-from ._structure import PyudevGraphs
-from ._structure import PyudevAggregateGraph
-from ._structure import SysfsTraversal
+class TestDepthFirst(object):
+    """
+    Test the depth first generator.
+    """
+    # pylint: disable=too-few-public-methods
 
-from ._traversal import holders
-from ._traversal import slaves
-
-from ._utils import GraphUtils
-from ._utils import Dict
-from ._utils import ExtendedLookup
+    def test_depth_first(self):
+        """
+        Test that set of nodes encountered in traversal equals set in graph.
+        """
+        gen_nodes = list(pydevDAG.DepthFirst.nodes(GRAPH, lambda x: ''))
+        assert frozenset(GRAPH.nodes()) == \
+           frozenset(y for _, y, _ in gen_nodes)
