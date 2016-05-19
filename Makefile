@@ -28,3 +28,7 @@ view:
 .PHONY: archive
 archive:
 	git archive --output=./pydevDAG.tar.gz HEAD
+
+.PHONY: docs
+docs:
+	cd doc/_build/html; zip -r ../../../docs *
