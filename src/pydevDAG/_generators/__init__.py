@@ -26,4 +26,5 @@
     .. moduleauthor::  Anne Mulhern  <amulhern@redhat.com>
 """
 
+from ._breadth import BreadthFirst
 from ._depth import DepthFirst
