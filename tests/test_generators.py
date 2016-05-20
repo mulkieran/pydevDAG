@@ -50,3 +50,18 @@ class TestDepthFirst(object):
         gen_nodes = list(pydevDAG.DepthFirst.nodes(GRAPH, lambda x: ''))
         assert frozenset(GRAPH.nodes()) == \
            frozenset(y for _, y, _ in gen_nodes)
+
+
+class TestBreadthFirst(object):
+    """
+    Test the breadth first generator.
+    """
+    # pylint: disable=too-few-public-methods
+
+    def test_breadth_first(self):
+        """
+        Test that set of nodes encountered in traversal equals set in graph.
+        """
+        gen_nodes = list(pydevDAG.BreadthFirst.nodes(GRAPH, lambda x: ''))
+        assert frozenset(GRAPH.nodes()) == \
+           frozenset(y for _, y, _ in gen_nodes)
