@@ -56,6 +56,7 @@ setuptools.setup(
         'Topic :: System :: Operating System Kernels :: Linux',
     ],
     install_requires = [
+        'justbytes>0.08',
         'networkx',
         'parseudev>=0.6.0',
         'pyudev>=0.19',
