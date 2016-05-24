@@ -31,6 +31,8 @@ from ._attributes import NodeTypes
 
 from ._errors import DAGError
 
+from ._item_str import NodeGetters
+
 from ._generators import BreadthFirst
 from ._generators import DepthFirst
 
