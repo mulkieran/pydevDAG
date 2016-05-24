@@ -32,6 +32,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import abc
+import os
 
 import six
 
@@ -195,6 +196,20 @@ class IdSasPath(NodeGetter):
             return None
 
 
+class Major(NodeGetter):
+    """
+    Get the major number for the device.
+    """
+    # pylint: disable=too-few-public-methods
+
+    @staticmethod
+    def getter(node):
+        try:
+            return os.major(Dict.get_value(node, ['DEVNO']))
+        except DAGValueError:
+            return None
+
+
 class NodeType(NodeGetter):
     """
     Get the type of the node.
@@ -273,6 +288,7 @@ class NodeGetters(object):
     IDENTIFIER = Identifier
     IDPATH = IdPath
     IDSASPATH = IdSasPath
+    MAJOR = Major
     NODETYPE = NodeType
     SIZE = Size
     SUBSYSTEM = Subsystem

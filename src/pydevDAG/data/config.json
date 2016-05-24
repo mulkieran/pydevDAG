@@ -17,6 +17,7 @@
     },
     "nodedecorations": {
         "DevicePath": {
+            "DEVNO" : {},
             "SYSNAME" : {},
             "UDEV": {
                 "args": [

@@ -137,6 +137,18 @@ class PyudevDecorator(object):
         raise NotImplementedError()
 
 
+class DeviceNumber(PyudevDecorator):
+    """
+    The device number.
+    """
+
+    def __init__(self, args):
+        pass
+
+    def decorate(self, device, attrdict):
+        attrdict['DEVNO'] = device.device_number
+
+
 class DevlinkValues(PyudevDecorator):
     """
     Add the informational part of device links to the graph.
@@ -225,6 +237,7 @@ class NodeDecorator(object):
 
     _FUNCTIONS = {
        'DEVLINK' : DevlinkValues,
+       'DEVNO': DeviceNumber,
        'SYSNAME': Sysname,
        'SYSFS': SysfsAttributes,
        'UDEV': UdevProperties
