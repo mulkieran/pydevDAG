@@ -40,7 +40,6 @@ import justbytes
 
 import parseudev
 
-from ._attributes import NodeTypes
 from ._errors import DAGValueError
 from ._utils import Dict
 
@@ -218,13 +217,7 @@ class NodeType(NodeGetter):
 
     @staticmethod
     def getter(node):
-        nodetype = node['nodetype']
-        if nodetype == NodeTypes.WWN:
-            return "Drive"
-        elif nodetype == NodeTypes.DEVICE_PATH:
-            return 'Device'
-        else:
-            return None
+        return node['nodetype']
 
 
 class Size(NodeGetter):
