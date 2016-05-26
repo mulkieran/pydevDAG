@@ -64,24 +64,6 @@ class NodeGetter(object):
         raise NotImplementedError()
 
 
-class ByPath(NodeGetter):
-    """
-    Get the value of the path devlink for the node.
-    """
-    # pylint: disable=too-few-public-methods
-
-    @staticmethod
-    def getter(node):
-        try:
-            links = Dict.get_value(node, ['DEVLINK', 'by-path'])
-            if links is None:
-                return None
-            else:
-                return "; ".join(str(link.value) for link in links)
-        except DAGValueError:
-            return None
-
-
 class Devname(NodeGetter):
     """
     Get a name for a node.
@@ -272,7 +254,6 @@ class NodeGetters(object):
     """
     # pylint: disable=too-few-public-methods
 
-    BY_PATH = ByPath # may be deprecated
     DEVNAME = Devname
     DEVPATH = Devpath
     DEVTYPE = Devtype
