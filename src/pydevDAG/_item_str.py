@@ -47,7 +47,7 @@ from ._utils import Dict
 @six.add_metaclass(abc.ABCMeta)
 class NodeGetter(object):
     """
-    Abstract parent class of classes for getting string info for a column.
+    Abstract parent class of classes for extracting info about nodes from graph.
     """
     # pylint: disable=too-few-public-methods
 
