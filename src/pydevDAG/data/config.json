@@ -17,6 +17,7 @@
              "DEVTYPE",
              "DM_NAME",
              "DM_UUID",
+             "DRIVER",
              "ID_PATH",
              "ID_SAS_PATH",
              "SUBSYSTEM",

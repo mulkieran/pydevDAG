@@ -123,6 +123,8 @@ class NodeDecorator(object):
           (Pyudev, ((NodeTypes.DEVICE_PATH,), lambda x: x.get('DM_NAME'))),
        'DM_UUID':
           (Pyudev, ((NodeTypes.DEVICE_PATH,), lambda x: x.get('DM_UUID'))),
+       'DRIVER':
+          (Pyudev, ((NodeTypes.DEVICE_PATH,), lambda x: x.driver)),
        'ID_PATH':
           (Pyudev, ((NodeTypes.DEVICE_PATH,), lambda x: x.get('ID_PATH'))),
        'ID_SAS_PATH':
