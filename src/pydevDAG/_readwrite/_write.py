@@ -37,8 +37,6 @@ from six import add_metaclass
 
 import networkx as nx
 
-from parseudev import Devlink
-
 from pydevDAG._attributes import EdgeTypes
 from pydevDAG._attributes import NodeTypes
 
@@ -134,29 +132,6 @@ class NodeTypeRewriter(ElementRewriter):
            NodeTypes.get_value
         )
 
-class DevlinkRewriter(ElementRewriter):
-    """
-    Rewrites device links attributes.
-    """
-
-    @staticmethod
-    def stringize(graph, node):
-        try:
-            devlink = graph.node[node]['DEVLINK']
-        except KeyError:
-            return
-        for key, value in devlink.items():
-            devlink[key] = None if value is None else [str(d) for d in value]
-
-    @staticmethod
-    def destringize(graph, node):
-        try:
-            devlink = graph.node[node]['DEVLINK']
-        except KeyError:
-            return
-        for key, value in devlink.items():
-            devlink[key] = \
-               None if value is None else [Devlink(d) for d in value]
 
 class EdgeTypeRewriter(ElementRewriter):
     """
@@ -183,7 +158,6 @@ class Rewriter(object):
     # pylint: disable=too-few-public-methods
 
     _NODE_REWRITERS = [
-       DevlinkRewriter,
        NodeTypeRewriter
     ]
 
