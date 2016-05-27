@@ -43,7 +43,7 @@ class StringUtils(object):
     # pylint: disable=too-few-public-methods
 
     @staticmethod
-    def as_string(graph, write_func):
+    def as_string(graph, write_func): # pragma: no cover
         """
         Return the entire graph as a single string in a structured format.
 
@@ -61,7 +61,7 @@ class StringUtils(object):
         return output.getvalue()
 
     @staticmethod
-    def from_string(instr, read_func):
+    def from_string(instr, read_func): # pragma: no cover
         """
         Get a graph from a string.
 

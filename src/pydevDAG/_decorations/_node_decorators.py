@@ -101,7 +101,7 @@ class Pyudev(Domain):
             if attrdict['nodetype'] in types:
                 try:
                     attrdict[name] = func(device)
-                except (KeyError, UnicodeDecodeError, ValueError):
+                except (KeyError, UnicodeDecodeError, ValueError): # pragma: no cover
                     attrdict[name] = None
 
 
@@ -166,7 +166,7 @@ class NodeDecorator(object):
         # get the functions that obtain the values
         try:
             field_map = ((field, self._FUNCTIONS[field]) for field in fields)
-        except KeyError as err:
+        except KeyError as err: # pragma: no cover
             raise DAGValueError(err)
 
         # sort the functions by domain
