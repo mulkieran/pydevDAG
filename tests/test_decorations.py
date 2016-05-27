@@ -58,16 +58,7 @@ class TestGraphNodeDecorations(object):
                [
                   {
                      "nodetype" : "DevicePath",
-                     "fields": [
-                        {
-                           "field_type": "compound",
-                           "field_name": "UDEV",
-                           "fields": [{
-                              "field_type": "simple",
-                              "field_name": "DEVPATH"
-                           }]
-                        }
-                     ]
+                     "fields": ["DEVPATH"]
                   }
                ]
                """
@@ -78,8 +69,7 @@ class TestGraphNodeDecorations(object):
         for node in graph.nodes():
             nodetype = graph.node[node]['nodetype']
             assert nodetype is not pydevDAG.NodeTypes.DEVICE_PATH or \
-               pydevDAG.Dict.get_value(graph.node[node], ["UDEV", "DEVPATH"]) \
-               == node
+               graph.node[node]['DEVPATH'] == node
 
 
 class TestNodeDecorating(object):

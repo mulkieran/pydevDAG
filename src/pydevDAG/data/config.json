@@ -11,29 +11,17 @@
        {
           "nodetype" : "DevicePath",
           "fields" : [
-             {"field_type": "simple", "field_name": "DEVNO"},
-             {"field_type": "simple", "field_name": "SYSNAME"},
-             {
-                "field_type": "compound",
-                "field_name": "UDEV",
-                "fields": [
-                   {"field_type": "simple", "field_name": "DEVNAME"},
-                   {"field_type": "simple", "field_name": "DEVPATH"},
-                   {"field_type": "simple", "field_name": "DEVTYPE"},
-                   {"field_type": "simple", "field_name": "DM_NAME"},
-                   {"field_type": "simple", "field_name": "DM_UUID"},
-                   {"field_type": "simple", "field_name": "ID_PATH"},
-                   {"field_type": "simple", "field_name": "ID_SAS_PATH"},
-                   {"field_type": "simple", "field_name": "SUBSYSTEM"}
-                ]
-             },
-             {
-                "field_type": "compound",
-                "field_name": "SYSFS",
-                "fields" : [
-                    {"field_type": "simple", "field_name": "size"}
-                ]
-             }
+             "DEVNAME",
+             "DEVNO",
+             "DEVPATH",
+             "DEVTYPE",
+             "DM_NAME",
+             "DM_UUID",
+             "ID_PATH",
+             "ID_SAS_PATH",
+             "SUBSYSTEM",
+             "SYSNAME",
+             "size"
           ]
        },
        {

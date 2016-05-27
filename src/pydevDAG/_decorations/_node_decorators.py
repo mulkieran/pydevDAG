@@ -40,8 +40,6 @@ import six
 
 import pyudev
 
-from parseudev import Devlink
-
 from pydevDAG._attributes import NodeTypes
 
 from pydevDAG._errors import DAGValueError
@@ -84,17 +82,13 @@ class Pyudev(Domain):
     # pylint: disable=too-few-public-methods
 
 
-    def __init__(self, objects):
+    def __init__(self, info_map):
         """
         Initializer.
 
         :param objects: a list of object that require a pyudev device
         """
-        objects = list(objects)
-        if any(o.DOMAIN is not self.__class__ for o in objects): # pragma: no cover
-            raise DAGValueError('objects must be in this domain')
-
-        self.objects = objects
+        self.info_map = info_map
         self.context = pyudev.Context()
 
     def decorate(self, node, attrdict):
@@ -103,131 +97,12 @@ class Pyudev(Domain):
         except pyudev.DeviceNotFoundError: # pragma: no cover
             return
 
-        for obj in self.objects:
-            if obj.decoratable(attrdict):
-                obj.decorate(device, attrdict)
-
-
-@six.add_metaclass(abc.ABCMeta)
-class PyudevDecorator(object):
-    """
-    Defines interface of objects that use pyudev to do their decorating.
-    """
-    DOMAIN = Pyudev
-
-    def decoratable(self, attrdict):
-        """
-        Whether ``attrdict`` represents a decoratable node.
-
-        :param dict attrdict: dict of node attributes
-        :returns: True if the node can be decorated by this class, else False
-        :rtype: bool
-        """
-        # pylint: disable=no-self-use
-        return attrdict['nodetype'] is NodeTypes.DEVICE_PATH
-
-    @abc.abstractmethod
-    def decorate(self, device, attrdict): # pragma: no cover
-        """
-        Decorate the ``attrdict`` belonging to ``device``.
-
-        :param Device device: libudev device
-        :param dict attrdict: currently stored dict for attributes
-        """
-        raise NotImplementedError()
-
-
-class DeviceNumber(PyudevDecorator):
-    """
-    The device number.
-    """
-
-    def __init__(self, args=None):
-        pass
-
-    def decorate(self, device, attrdict):
-        attrdict['DEVNO'] = device.device_number
-
-
-class DevlinkValues(PyudevDecorator):
-    """
-    Add the informational part of device links to the graph.
-    """
-
-    def __init__(self, args):
-        self.categories = args
-
-    def decorate(self, device, attrdict):
-        def key_func(link):
-            """
-            :returns: category of link, or "" if no category
-            :rtype: str
-            """
-            key = link.category
-            return key if key is not None else ""
-
-        result = dict.fromkeys(self.categories)
-
-        # pylint: disable=protected-access
-        devlinks = sorted(
-           (Devlink(d) for d in device.device_links),
-           key=key_func
-        )
-        result.update(
-           (k, g) for (k, g) in groupby(devlinks, key_func) if \
-               k in self.categories
-        )
-
-        attrdict['DEVLINK'] = result
-
-
-class SysfsAttributes(PyudevDecorator):
-    """
-    Find sysfs attributes for the device nodes of a network graph.
-
-    Set a value for every name requested.
-    """
-
-    def __init__(self, args):
-        self.names = args
-
-    def decorate(self, device, attrdict):
-        attributes = device.attributes
-
-        res = dict()
-        for key in self.names:
-            try:
-                res[key] = attributes.asstring(key)
-            except (KeyError, UnicodeDecodeError): # pragma: no cover
-                res[key] = None
-        attrdict['SYSFS'] = res
-
-
-class Sysname(PyudevDecorator):
-    """
-    Get the sysname for the object.
-    """
-
-    def __init__(self, args=None):
-        pass
-
-    def decorate(self, device, attrdict):
-        attrdict['SYSNAME'] = device.sys_name
-
-
-class UdevProperties(PyudevDecorator):
-    """
-    Find udev properties for the device nodes of a network graph.
-
-    Set a value for every name requested.
-    """
-
-    def __init__(self, args):
-        self.names = args
-
-    def decorate(self, device, attrdict):
-        attrdict['UDEV'] = \
-           dict((k, device.get(k)) for k in self.names)
+        for (name, (types, func)) in self.info_map.items():
+            if attrdict['nodetype'] in types:
+                try:
+                    attrdict[name] = func(device)
+                except (KeyError, UnicodeDecodeError, ValueError):
+                    attrdict[name] = None
 
 
 class NodeDecorator(object):
@@ -236,11 +111,31 @@ class NodeDecorator(object):
     """
 
     _FUNCTIONS = {
-       'DEVLINK' : DevlinkValues,
-       'DEVNO': DeviceNumber,
-       'SYSNAME': Sysname,
-       'SYSFS': SysfsAttributes,
-       'UDEV': UdevProperties
+       'DEVNAME':
+          (Pyudev, ((NodeTypes.DEVICE_PATH,), lambda x: x.get('DEVNAME'))),
+       'DEVNO':
+          (Pyudev, ((NodeTypes.DEVICE_PATH,), lambda x: x.device_number)),
+       'DEVPATH':
+          (Pyudev, ((NodeTypes.DEVICE_PATH,), lambda x: x.get('DEVPATH'))),
+       'DEVTYPE':
+          (Pyudev, ((NodeTypes.DEVICE_PATH,), lambda x: x.get('DEVTYPE'))),
+       'DM_NAME':
+          (Pyudev, ((NodeTypes.DEVICE_PATH,), lambda x: x.get('DM_NAME'))),
+       'DM_UUID':
+          (Pyudev, ((NodeTypes.DEVICE_PATH,), lambda x: x.get('DM_UUID'))),
+       'ID_PATH':
+          (Pyudev, ((NodeTypes.DEVICE_PATH,), lambda x: x.get('ID_PATH'))),
+       'ID_SAS_PATH':
+          (Pyudev, ((NodeTypes.DEVICE_PATH,), lambda x: x.get('ID_SAS_PATH'))),
+       'SUBSYSTEM':
+          (Pyudev, ((NodeTypes.DEVICE_PATH,), lambda x: x.subsystem)),
+       'SYSNAME':
+          (Pyudev, ((NodeTypes.DEVICE_PATH,), lambda x: x.sys_name)),
+       'size':
+          (
+             Pyudev,
+             ((NodeTypes.DEVICE_PATH,), lambda x: x.attributes.asint('size'))
+          )
     }
 
     def __init__(self, config):
@@ -251,41 +146,38 @@ class NodeDecorator(object):
         :type config: dict (JSON)
         """
         # list of tuple of NodeType * dict
-        nodeconfigs = [(NodeTypes.get_value(k["nodetype"]), k) for k in config]
+        nodeconfigs = \
+           [(NodeTypes.get_value(k["nodetype"]), k['fields']) for k in config]
         configs = [(k, v) for (k, v) in nodeconfigs if k is not None]
 
         # map of NodeType * (list of Domain)
         self.table = dict((k, self.get_decorator(v)) for (k, v) in configs)
 
-    def get_decorator(self, config):
+    def get_decorator(self, fields):
         """
         Get a decorator for one particular nodetype.
 
-        :param config: the configuration for a particular node type
-        :type config: dict (JSON)
+        :param fields: fields for decorating this device type
+        :type fields: list of str
 
         :returns: a sequence of objects for decorating
         :rtype: list of Domain
         """
         # get the functions that obtain the values
-        fields = [
-           (self._FUNCTIONS.get(field['field_name']), field) \
-              for field in config['fields']
-        ]
+        try:
+            field_map = ((field, self._FUNCTIONS[field]) for field in fields)
+        except KeyError as err:
+            raise DAGValueError(err)
 
         # sort the functions by domain
-        objects = groupby(
-           sorted(
-              ((k() if field['field_type'] == "simple" \
-                  else k([f['field_name'] for f in field['fields']])) \
-                  for (k, field) in fields),
-              key=lambda x: x.DOMAIN.name()
-           ),
-           lambda x: x.DOMAIN
-        )
+        domain_pairs = \
+           groupby(sorted(field_map, key=lambda x: x[1][0]), lambda x: x[1][0])
 
         # construct a domain object from its component objects
-        return [k(v) for (k, v) in objects]
+        return [
+           domain(dict((name, other) for (name, (domain, other)) in l)) for \
+              (domain, l) in domain_pairs
+        ]
 
     def decorate(self, node, attrdict):
         """
