@@ -142,7 +142,7 @@ class DeviceNumber(PyudevDecorator):
     The device number.
     """
 
-    def __init__(self, args):
+    def __init__(self, args=None):
         pass
 
     def decorate(self, device, attrdict):
@@ -208,7 +208,7 @@ class Sysname(PyudevDecorator):
     Get the sysname for the object.
     """
 
-    def __init__(self, args):
+    def __init__(self, args=None):
         pass
 
     def decorate(self, device, attrdict):
@@ -251,9 +251,7 @@ class NodeDecorator(object):
         :type config: dict (JSON)
         """
         # list of tuple of NodeType * dict
-        nodeconfigs = (
-           (NodeTypes.get_value(k), v) for (k, v) in config.items()
-        )
+        nodeconfigs = [(NodeTypes.get_value(k["nodetype"]), k) for k in config]
         configs = [(k, v) for (k, v) in nodeconfigs if k is not None]
 
         # map of NodeType * (list of Domain)
@@ -269,19 +267,21 @@ class NodeDecorator(object):
         :returns: a sequence of objects for decorating
         :rtype: list of Domain
         """
-        # Find all available classes for a given key
-        # list of tuple of type * dict (JSON)
-        klasses = [(self._FUNCTIONS.get(k), v) for (k, v) in config.items()]
+        # get the functions that obtain the values
+        fields = [
+           (self._FUNCTIONS.get(field['field_name']), field) \
+              for field in config['fields']
+        ]
 
-        # sort the objects by their domain
-        key_func = lambda x: x.DOMAIN
-        sort_func = lambda x: key_func(x).name()
+        # sort the functions by domain
         objects = groupby(
            sorted(
-               [k(v.get('args')) for (k, v) in klasses if k is not None],
-               key=sort_func
+              ((k() if field['field_type'] == "simple" \
+                  else k([f['field_name'] for f in field['fields']])) \
+                  for (k, field) in fields),
+              key=lambda x: x.DOMAIN.name()
            ),
-           key_func
+           lambda x: x.DOMAIN
         )
 
         # construct a domain object from its component objects
