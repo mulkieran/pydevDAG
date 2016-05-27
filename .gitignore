@@ -35,3 +35,7 @@ doc/tests
 
 # junk files
 junk.*
+
+build
+dist
+docs.zip
